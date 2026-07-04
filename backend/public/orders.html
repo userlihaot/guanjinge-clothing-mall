@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的订单 - 观锦阁</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="app">
+<header class="header"><div class="header-inner">
+  <div class="logo" onclick="location.href='/'" style="cursor:pointer">观锦阁<span>| 我的订单</span></div>
+  <div class="actions"><a href="/" style="color:var(--gold)">返回首页</a></div>
+</div></header>
+
+<div class="container" style="padding-top:20px" v-if="!Auth.isLoggedIn()">
+  <el-empty description="请先登录"><el-button type="primary" @click="goLogin">去登录</el-button></el-empty>
+</div>
+
+<div class="container" style="padding-top:20px" v-else>
+  <el-tabs v-model="activeTab" @tab-change="loadOrders">
+    <el-tab-pane label="全部" name=""></el-tab-pane>
+    <el-tab-pane label="待付款" name="0"></el-tab-pane>
+    <el-tab-pane label="待发货" name="1"></el-tab-pane>
+    <el-tab-pane label="待收货" name="2"></el-tab-pane>
+    <el-tab-pane label="已完成" name="3"></el-tab-pane>
+  </el-tabs>
+
+  <div v-if="orders.length">
+    <div v-for="o in orders" :key="o.order_no" style="background:#fff;border-radius:8px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden">
+      <div style="padding:12px 16px;background:var(--bg-cream);display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#999;font-size:13px">订单号：{{o.order_no}} | {{o.create_time}}</span>
+        <span :style="'color:'+statusColor(o.status)">{{ statusText(o.status) }}</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div v-for="item in o.itemList" :key="item.id" style="display:flex;align-items:center;gap:12px;padding:8px 0">
+          <img :src="item.product_image" style="width:60px;height:60px;object-fit:cover;border-radius:4px">
+          <div style="flex:1">{{item.product_name}} <span style="color:#999" v-if="item.sku_name">({{item.sku_name}})</span></div>
+          <div>¥{{item.price}} × {{item.quantity}}</div>
+        </div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span>共 {{o.itemList?o.itemList.length:0}} 件 | 实付 <b style="color:var(--red)">¥{{o.real_amount}}</b></span>
+        <div style="display:flex;gap:8px">
+          <el-button v-if="o.status===0" size="small" @click="doPay(o.order_no)">去支付</el-button>
+          <el-button v-if="o.status===0" size="small" @click="cancelOrder(o.order_no)">取消</el-button>
+          <el-button v-if="o.status===2" size="small" type="primary" @click="confirmOrder(o.order_no)">确认收货</el-button>
+          <el-button v-if="o.status===1||o.status===2||o.status===3" size="small" @click="applyRefund(o)">申请退款</el-button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <el-empty v-else description="暂无订单"></el-empty>
+</div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script>
+const { createApp, ref, onMounted } = Vue;
+const App = {
+  setup() {
+    const orders = ref([]);
+    const activeTab = ref('');
+
+    const statusMap = {0:'待付款',1:'待发货',2:'待收货',3:'已完成',4:'已取消',5:'退款中',6:'已退款'};
+    const statusColors = {0:'#E6A23C',1:'#409EFF',2:'#9C27B0',3:'#67C23A',4:'#909399',5:'#F56C6C',6:'#909399'};
+
+    const loadOrders = async () => {
+      const res = await orderApi.getList({ status: activeTab.value || undefined });
+      if (res.code === 200) orders.value = res.data.records;
+    };
+
+    onMounted(loadOrders);
+
+    const doPay = async (orderNo) => {
+      try {
+        await ElementPlus.ElMessageBox.confirm('选择支付方式','支付',{confirmButtonText:'微信支付',cancelButtonText:'支付宝',type:'info'});
+        const method = 'alipay';
+        const res = await payApi.doPay({ orderNo, payMethod: method });
+        if (res.code === 200) { ElementPlus.ElMessage.success('支付成功！'); loadOrders(); }
+        else ElementPlus.ElMessage.error(res.message);
+      } catch(e) { if(e!=='cancel') console.error(e); }
+    };
+
+    const cancelOrder = async (orderNo) => {
+      try {
+        await ElementPlus.ElMessageBox.confirm('确定取消该订单？','提示',{type:'warning'});
+        await orderApi.cancel(orderNo);
+        ElementPlus.ElMessage.success('已取消');
+        loadOrders();
+      } catch(e) {}
+    };
+
+    const confirmOrder = async (orderNo) => {
+      try {
+        await ElementPlus.ElMessageBox.confirm('确认已收到商品？','确认收货',{type:'info'});
+        await orderApi.confirm(orderNo);
+        ElementPlus.ElMessage.success('已确认收货');
+        loadOrders();
+      } catch(e) {}
+    };
+
+    const applyRefund = async (order) => {
+      try {
+        const { value: reason } = await ElementPlus.ElMessageBox.prompt('请输入退款原因','申请退款',{inputType:'textarea'});
+        if (reason) {
+          const res = await refundApi.apply({ orderNo: order.order_no, reason, type: 1, refundAmount: order.real_amount });
+          if (res.code === 200) { ElementPlus.ElMessage.success('退款申请已提交'); loadOrders(); }
+        }
+      } catch(e) {}
+    };
+
+    return { orders, activeTab, loadOrders, doPay, cancelOrder, confirmOrder, applyRefund, statusText: (s) => statusMap[s]||'未知', statusColor: (s) => statusColors[s]||'#999', Auth, goLogin() { location.href='/login.html'; } };
+  }
+};
+const app = createApp(App); app.use(ElementPlus); app.mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,460 @@
+/* ============================================
+   观锦阁 - 古装服饰商城 全局样式
+   配色方案：红棕色 / 米白 / 淡金 国风主题
+   ============================================ */
+
+/* ---------- CSS 自定义属性（主题变量） ---------- */
+:root {
+  /* 主色调 - 红棕色系 */
+  --color-primary: #8B4513;        /* 主色：马鞍棕 */
+  --color-primary-light: #A0522D;  /* 浅红棕 */
+  --color-primary-dark: #6B3410;   /* 深红棕 */
+  --color-primary-hover: #7A3B10;  /* 悬停态 */
+
+  /* 背景色 */
+  --color-bg-primary: #FFF8F0;     /* 主背景：米白色 */
+  --color-bg-white: #FFFFFF;       /* 纯白背景 */
+  --color-bg-card: #FFFAF5;        /* 卡片背景：暖米白 */
+
+  /* 强调色 - 淡金色 */
+  --color-accent: #D4A574;         /* 淡金色点缀 */
+  --color-accent-light: #E8C9A0;   /* 浅淡金 */
+  --color-accent-dark: #B8895A;    /* 深淡金 */
+
+  /* 文字颜色 */
+  --color-text-primary: #3D2B1F;   /* 主文字：深棕色 */
+  --color-text-regular: #5C4033;   /* 常规文字 */
+  --color-text-secondary: #8B7355; /* 次要文字 */
+  --color-text-placeholder: #BFA98A; /* 占位符文字 */
+
+  /* 边框颜色 */
+  --color-border: #E8D5C0;         /* 默认边框 */
+  --color-border-light: #F0E4D4;   /* 浅边框 */
+  --color-border-base: #DBC8B0;    /* 基础边框 */
+
+  /* 功能色 */
+  --color-danger: #C0392B;         /* 红色 - 删除/警告 */
+  --color-success: #6B8E23;        /* 橄榄绿 - 成功 */
+  --color-warning: #D4943A;        /* 金色 - 警告 */
+  --color-info: #8B7355;           /* 信息色 */
+
+  /* 阴影 */
+  --shadow-light: 0 2px 8px rgba(139, 69, 19, 0.08);
+  --shadow-medium: 0 4px 16px rgba(139, 69, 19, 0.12);
+  --shadow-heavy: 0 8px 32px rgba(139, 69, 19, 0.16);
+
+  /* 圆角 */
+  --radius-small: 4px;
+  --radius-base: 8px;
+  --radius-large: 12px;
+  --radius-round: 20px;
+
+  /* 字体 */
+  --font-family-base: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    'Noto Sans SC', sans-serif;
+  --font-family-serif: 'Noto Serif SC', 'STSong', 'SimSun', 'KaiTi', serif;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+}
+
+/* ---------- CSS Reset 重置 ---------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-primary);
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+input, textarea, button, select {
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* ---------- 工具类 ---------- */
+.text-primary { color: var(--color-primary) !important; }
+.text-accent { color: var(--color-accent) !important; }
+.text-danger { color: var(--color-danger) !important; }
+.text-center { text-align: center; }
+.text-serif { font-family: var(--font-family-serif); }
+
+.bg-primary { background-color: var(--color-bg-primary); }
+.bg-white { background-color: var(--color-bg-white); }
+
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+.mt-md { margin-top: var(--spacing-md); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+
+/* ---------- 页面容器 ---------- */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.page-title {
+  font-family: var(--font-family-serif);
+  font-size: 28px;
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+}
+
+.page-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--color-accent);
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+/* ---------- Element Plus 主题覆盖 ---------- */
+/* 按钮 */
+.el-button--primary {
+  --el-button-bg-color: var(--color-primary);
+  --el-button-border-color: var(--color-primary);
+  --el-button-hover-bg-color: var(--color-primary-hover);
+  --el-button-hover-border-color: var(--color-primary-hover);
+  --el-button-active-bg-color: var(--color-primary-dark);
+  --el-button-active-border-color: var(--color-primary-dark);
+}
+
+.el-button--primary.is-plain {
+  --el-button-text-color: var(--color-primary);
+  --el-button-bg-color: var(--color-bg-primary);
+  --el-button-border-color: var(--color-primary);
+}
+
+/* 输入框焦点 */
+.el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--color-primary) inset;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--color-border-base) inset;
+}
+
+/* 下拉菜单/选择器 */
+.el-select .el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--color-primary) inset;
+}
+
+/* 单选按钮激活态 */
+.el-radio__input.is-checked .el-radio__inner {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.el-radio__input.is-checked + .el-radio__label {
+  color: var(--color-primary);
+}
+
+/* 复选框激活态 */
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: var(--color-primary);
+}
+
+/* 标签页 */
+.el-tabs__item.is-active,
+.el-tabs__item:hover {
+  color: var(--color-primary);
+}
+
+.el-tabs__active-bar {
+  background-color: var(--color-primary);
+}
+
+/* 分页器 */
+.el-pagination .el-pager li.is-active {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.el-pagination .el-pager li:hover {
+  color: var(--color-primary);
+}
+
+/* 表格 */
+.el-table th.el-table__cell {
+  background-color: #FDF5ED;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* 卡片 */
+.el-card {
+  --el-card-border-color: var(--color-border-light);
+  border-radius: var(--radius-base);
+  transition: box-shadow 0.3s ease;
+}
+
+.el-card:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+/* 消息提示 */
+.el-message {
+  --el-message-bg-color: var(--color-bg-primary);
+  border-color: var(--color-accent);
+}
+
+/* 轮播图指示器 */
+.el-carousel__indicator.is-active button {
+  background-color: var(--color-primary);
+}
+
+/* 数字输入框按钮颜色 */
+.el-input-number__decrease:hover:not(.is-disabled)
+  ~ .el-input__wrapper:not(.is-disabled),
+.el-input-number__increase:hover:not(.is-disabled)
+  ~ .el-input__wrapper:not(.is-disabled) {
+  box-shadow: 0 0 0 1px var(--color-primary) inset;
+}
+
+/* ---------- 路由过渡动画 ---------- */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* ---------- 响应式布局 ---------- */
+@media (max-width: 1200px) {
+  .page-container {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+  }
+
+  .page-container {
+    padding: var(--spacing-sm);
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* ---------- 滚动条美化 ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-dark);
+}
+
+/* ---------- 价格样式 ---------- */
+.price-current {
+  font-size: 22px;
+  font-weight: 700;
+  color: #C0392B;
+}
+
+.price-current .symbol {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.price-original {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  margin-left: 8px;
+}
+
+/* ---------- 商品标签 ---------- */
+.tag-hot {
+  display: inline-block;
+  background: linear-gradient(135deg, #C0392B, #E74C3C);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.tag-new {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-light));
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.tag-dynasty {
+  display: inline-block;
+  background-color: #FDF5ED;
+  color: var(--color-primary);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--color-accent);
+}
+
+/* ============================================
+   管理后台通用样式
+   ============================================ */
+
+/* 页面标题 */
+.admin-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #3C2415;
+  margin-bottom: 16px;
+}
+
+/* 卡片容器 */
+.card-container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(139, 69, 19, 0.06);
+  border: 1px solid #f0e8dc;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3C2415;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #E8C9A0;
+}
+
+/* 搜索/筛选栏 */
+.search-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-bar .el-input,
+.search-bar .el-select {
+  width: 220px;
+}
+
+.search-bar .el-button {
+  flex-shrink: 0;
+}
+
+/* 分页容器 */
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f5f0eb;
+}
+
+/* 无图片提示 */
+.no-image {
+  color: #c0c4cc;
+  font-size: 12px;
+}
+
+/* 金额文本 */
+.amount-text {
+  font-weight: 600;
+  color: #C0392B;
+}
+
+/* 分类图标图片 */
+.cat-icon-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.cat-icon-text {
+  font-size: 24px;
+  line-height: 1;
+}

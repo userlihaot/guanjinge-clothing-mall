@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 - 观锦阁</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<style>
+body{margin:0;font-family:"Microsoft YaHei",sans-serif}
+.admin-layout{display:flex;min-height:100vh}
+.sidebar{width:200px;background:#1a1a2e;color:#fff;padding-top:16px;flex-shrink:0}
+.sidebar .logo{padding:16px 20px;font-size:20px;color:#D4A574;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px}
+.sidebar .menu-item{padding:14px 20px;cursor:pointer;color:#ccc;transition:.3s;display:flex;align-items:center;gap:8px;font-size:14px}
+.sidebar .menu-item:hover,.sidebar .menu-item.active{background:rgba(212,165,116,.2);color:#D4A574}
+.main{flex:1;background:#f0f2f5;padding:20px}
+.main .header{background:#fff;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);text-align:center}
+.stat-card .num{font-size:32px;font-weight:bold;color:#8B4513}
+.stat-card .label{color:#999;margin-top:4px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="app" v-if="!loading">
+  <div v-if="!admin">
+    <div style="text-align:center;padding:100px"><el-button type="primary" @click="goLogin">请先登录</el-button></div>
+  </div>
+  <div class="admin-layout" v-else>
+    <div class="sidebar">
+      <div class="logo">观锦阁 管理</div>
+      <div class="menu-item" :class="{active:tab==='dashboard'}" @click="tab='dashboard'">📊 数据统计</div>
+      <div class="menu-item" :class="{active:tab==='products'}" @click="tab='products';loadProducts()">👘 商品管理</div>
+      <div class="menu-item" :class="{active:tab==='orders'}" @click="tab='orders';loadOrders()">📦 订单管理</div>
+      <div class="menu-item" :class="{active:tab==='users'}" @click="tab='users';loadUsers()">👥 用户管理</div>
+      <div class="menu-item" :class="{active:tab==='coupons'}" @click="tab='coupons';loadCoupons()">🎫 优惠券</div>
+      <div class="menu-item" :class="{active:tab==='reviews'}" @click="tab='reviews';loadReviews()">⭐ 评价审核</div>
+      <div class="menu-item" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.1)" @click="logout">🚪 退出</div>
+    </div>
+    <div class="main">
+      <!-- 仪表盘 -->
+      <template v-if="tab==='dashboard'">
+        <h2>数据统计</h2>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="num" style="color:#E6A23C">{{stats.todayOrders}}</div><div class="label">今日订单</div></div>
+          <div class="stat-card"><div class="num" style="color:#67C23A">¥{{stats.todaySales}}</div><div class="label">今日销售额</div></div>
+          <div class="stat-card"><div class="num">{{stats.totalUsers}}</div><div class="label">总用户数</div></div>
+          <div class="stat-card"><div class="num">{{stats.activeProducts}}</div><div class="label">上架商品</div></div>
+        </div>
+        <el-card><template #header>最近订单</template>
+          <el-table :data="stats.recentOrders||[]" size="small"><el-table-column prop="order_no" label="订单号" width="200"></el-table-column><el-table-column prop="real_amount" label="金额"></el-table-column><el-table-column label="状态"><template #default="{row}">{{['待付款','待发货','待收货','已完成','已取消','退款中','已退款'][row.status]}}</template></el-table-column><el-table-column prop="create_time" label="时间" width="180"></el-table-column></el-table>
+        </el-card>
+      </template>
+
+      <!-- 商品管理 -->
+      <template v-if="tab==='products'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h2>商品管理</h2>
+          <el-input v-model="pKeyword" placeholder="搜索商品" style="width:200px" @input="loadProducts" clearable></el-input>
+        </div>
+        <el-table :data="products" size="small" border>
+          <el-table-column prop="id" label="ID" width="60"></el-table-column>
+          <el-table-column label="封面" width="80"><template #default="{row}"><img :src="row.cover_image" style="width:50px;height:50px;object-fit:cover;border-radius:4px"></template></el-table-column>
+          <el-table-column prop="name" label="名称"></el-table-column>
+          <el-table-column prop="category_name" label="分类" width="90"></el-table-column>
+          <el-table-column label="价格" width="100"><template #default="{row}">¥{{row.promotion_price||row.price}}</template></el-table-column>
+          <el-table-column prop="stock" label="库存" width="70"></el-table-column>
+          <el-table-column prop="sales_count" label="销量" width="70"></el-table-column>
+          <el-table-column label="状态" width="80"><template #default="{row}"><el-switch :model-value="row.status===1" @change="(v)=>toggleShelve(row.id,v)" active-text="上架"></el-switch></template></el-table-column>
+          <el-table-column label="操作" width="140">
+            <template #default="{row}">
+              <el-button size="small" @click="editProduct(row)">编辑</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <!-- 编辑对话框 -->
+        <el-dialog v-model="editVisible" title="编辑商品" width="500px">
+          <el-form :model="editForm" label-width="80px" v-if="editForm">
+            <el-form-item label="名称"><el-input v-model="editForm.name"></el-input></el-form-item>
+            <el-form-item label="价格"><el-input-number v-model="editForm.price" :min="0" :precision="2"></el-input-number></el-form-item>
+            <el-form-item label="库存"><el-input-number v-model="editForm.stock" :min="0"></el-input-number></el-form-item>
+            <el-form-item label="封面图"><el-input v-model="editForm.cover_image" placeholder="图片URL"></el-input></el-form-item>
+          </el-form>
+          <template #footer><el-button @click="editVisible=false">取消</el-button><el-button type="primary" @click="saveProduct">保存</el-button></template>
+        </el-dialog>
+      </template>
+
+      <!-- 订单管理 -->
+      <template v-if="tab==='orders'">
+        <h2 style="margin-bottom:16px">订单管理</h2>
+        <el-table :data="orders" size="small" border>
+          <el-table-column prop="order_no" label="订单号" width="180"></el-table-column>
+          <el-table-column prop="real_amount" label="金额" width="90"></el-table-column>
+          <el-table-column label="状态" width="90"><template #default="{row}"><el-tag :type="['warning','','danger','success','info','danger','info'][row.status]">{{['待付款','待发货','待收货','已完成','已取消','退款中','已退款'][row.status]}}</el-tag></template></el-table-column>
+          <el-table-column prop="receiver_name" label="收货人" width="80"></el-table-column>
+          <el-table-column prop="create_time" label="下单时间" width="160"></el-table-column>
+          <el-table-column label="操作" width="120">
+            <template #default="{row}">
+              <el-button v-if="row.status===1" size="small" type="primary" @click="showDeliver(row)">发货</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-dialog v-model="deliverVisible" title="发货" width="350px">
+          <el-form>
+            <el-form-item label="快递公司"><el-input v-model="deliverForm.company"></el-input></el-form-item>
+            <el-form-item label="快递单号"><el-input v-model="deliverForm.logisticsNo"></el-input></el-form-item>
+          </el-form>
+          <template #footer><el-button @click="deliverVisible=false">取消</el-button><el-button type="primary" @click="doDeliver">确认发货</el-button></template>
+        </el-dialog>
+      </template>
+
+      <!-- 用户管理 -->
+      <template v-if="tab==='users'">
+        <h2 style="margin-bottom:16px">用户管理</h2>
+        <el-table :data="users" size="small" border>
+          <el-table-column prop="id" label="ID" width="60"></el-table-column>
+          <el-table-column prop="username" label="用户名"></el-table-column>
+          <el-table-column prop="phone" label="手机号" width="130"></el-table-column>
+          <el-table-column prop="create_time" label="注册时间" width="160"></el-table-column>
+          <el-table-column label="状态" width="80"><template #default="{row}"><el-switch :model-value="row.status===1" @change="(v)=>toggleUser(row.id)"></el-switch></template></el-table-column>
+        </el-table>
+      </template>
+
+      <!-- 优惠券 -->
+      <template v-if="tab==='coupons'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h2>优惠券管理</h2>
+          <el-button type="primary" @click="showCouponForm">+ 新增</el-button>
+        </div>
+        <el-table :data="coupons" size="small" border>
+          <el-table-column prop="name" label="名称"></el-table-column>
+          <el-table-column label="类型" width="80"><template #default="{row}">{{['','满减','折扣','无门槛'][row.type]}}</template></el-table-column>
+          <el-table-column prop="reduce_amount" label="面值" width="80"></el-table-column>
+          <el-table-column prop="received_count" label="已领" width="60"></el-table-column>
+          <el-table-column label="操作" width="80"><template #default="{row}"><el-button size="small" type="danger" @click="delCoupon(row.id)">删除</el-button></template></el-table-column>
+        </el-table>
+        <el-dialog v-model="couponVisible" title="新增优惠券" width="400px">
+          <el-form :model="couponForm" label-width="80px">
+            <el-form-item label="名称"><el-input v-model="couponForm.name"></el-input></el-form-item>
+            <el-form-item label="类型"><el-select v-model="couponForm.type"><el-option label="满减" :value="1"></el-option><el-option label="折扣" :value="2"></el-option><el-option label="无门槛" :value="3"></el-option></el-select></el-form-item>
+            <el-form-item label="满多少"><el-input-number v-model="couponForm.fullAmount" :min="0"></el-input-number></el-form-item>
+            <el-form-item label="减多少"><el-input-number v-model="couponForm.reduceAmount" :min="0"></el-input-number></el-form-item>
+            <el-form-item label="发放量"><el-input-number v-model="couponForm.totalCount" :min="1"></el-input-number></el-form-item>
+          </el-form>
+          <template #footer><el-button @click="couponVisible=false">取消</el-button><el-button type="primary" @click="saveCoupon">保存</el-button></template>
+        </el-dialog>
+      </template>
+
+      <!-- 评价审核 -->
+      <template v-if="tab==='reviews'">
+        <h2 style="margin-bottom:16px">评价审核</h2>
+        <el-table :data="reviews" size="small" border>
+          <el-table-column prop="product_name" label="商品" width="150"></el-table-column>
+          <el-table-column prop="content" label="内容"></el-table-column>
+          <el-table-column label="评分" width="80"><template #default="{row}">{{'★'.repeat(row.star)}}</template></el-table-column>
+          <el-table-column label="状态" width="90"><template #default="{row}"><el-tag :type="row.is_audited===1?'success':row.is_audited===2?'danger':'warning'">{{['待审核','已通过','已驳回'][row.is_audited]}}</el-tag></template></el-table-column>
+          <el-table-column label="操作" width="180">
+            <template #default="{row}">
+              <el-button v-if="row.is_audited===0" size="small" type="success" @click="auditReview(row.id,1)">通过</el-button>
+              <el-button v-if="row.is_audited===0" size="small" type="danger" @click="auditReview(row.id,2)">驳回</el-button>
+              <el-button size="small" @click="replyReview(row)">回复</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </template>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/api.js"></script>
+<script>
+const { createApp, ref, reactive, onMounted } = Vue;
+const App = {
+  setup() {
+    const loading = ref(true);
+    const admin = ref(JSON.parse(localStorage.getItem('adminInfo')||'null'));
+    const token = localStorage.getItem('adminToken');
+    // 为管理员请求设置 Authorization
+    if(token) axios.defaults.headers.common['Authorization'] = 'Bearer '+token;
+
+    const tab = ref('dashboard');
+    const stats = ref({});
+    const products = ref([]), pKeyword = ref('');
+    const orders = ref([]);
+    const users = ref([]);
+    const coupons = ref([]);
+    const reviews = ref([]);
+
+    // 编辑商品
+    const editVisible = ref(false), editForm = ref(null);
+    const deliverVisible = ref(false), deliverForm = reactive({ company:'顺丰速运', logisticsNo:'', orderNo:'' });
+    const couponVisible = ref(false), couponForm = reactive({ name:'',type:1,fullAmount:0,reduceAmount:0,totalCount:100 });
+
+    onMounted(async () => {
+      if(!admin.value||!token){ loading.value=false;return; }
+      try{
+        const res = await adminApi.getDashboard();
+        if(res.code===200) stats.value = res.data;
+      }catch(e){ if(e.response&&e.response.status===401){ logout();return; }}
+      loading.value=false;
+    });
+
+    // 商品
+    const loadProducts = async () => {
+      const res = await adminApi.getProducts({ keyword: pKeyword.value, size: 50 });
+      if(res.code===200) products.value = res.data.records;
+    };
+    const toggleShelve = async (id, v) => {
+      if(v) await adminApi.shelve(id); else await adminApi.unshelve(id);
+      loadProducts();
+    };
+    const editProduct = (row) => { editForm.value = {...row}; editVisible.value=true; };
+    const saveProduct = async () => {
+      await adminApi.updateProduct(editForm.value.id, editForm.value);
+      editVisible.value=false; loadProducts(); ElementPlus.ElMessage.success('已保存');
+    };
+
+    // 订单
+    const loadOrders = async () => {
+      const res = await adminApi.getOrders({ size: 50 });
+      if(res.code===200) orders.value = res.data.records;
+    };
+    const showDeliver = (row) => { deliverForm.orderNo=row.order_no; deliverVisible.value=true; };
+    const doDeliver = async () => {
+      await adminApi.deliver(deliverForm.orderNo, { company:deliverForm.company, logisticsNo:deliverForm.logisticsNo });
+      deliverVisible.value=false; loadOrders(); ElementPlus.ElMessage.success('已发货');
+    };
+
+    // 用户
+    const loadUsers = async () => {
+      const res = await adminApi.getUsers({ size: 50 });
+      if(res.code===200) users.value = res.data.records;
+    };
+    const toggleUser = async (id) => {
+      await adminApi.toggleUserStatus(id); loadUsers();
+    };
+
+    // 优惠券
+    const loadCoupons = async () => {
+      const res = await adminApi.getCoupons();
+      if(res.code===200) coupons.value = res.data;
+    };
+    const showCouponForm = () => { Object.assign(couponForm,{name:'',type:1,fullAmount:0,reduceAmount:0,totalCount:100}); couponVisible.value=true; };
+    const saveCoupon = async () => {
+      await adminApi.createCoupon({...couponForm, startTime:'2025-01-01 00:00:00', endTime:'2027-12-31 23:59:59', description:''});
+      couponVisible.value=false; loadCoupons(); ElementPlus.ElMessage.success('已创建');
+    };
+    const delCoupon = async (id) => {
+      try{ await ElementPlus.ElMessageBox.confirm('确定删除？','提示',{type:'warning'});
+        await adminApi.deleteCoupon(id); loadCoupons(); }catch(e){}
+    };
+
+    // 评价
+    const loadReviews = async () => {
+      const res = await adminApi.getReviews({ size: 50 });
+      if(res.code===200) reviews.value = res.data.records;
+    };
+    const auditReview = async (id, isAudited) => {
+      await adminApi.auditReview(id, isAudited); loadReviews();
+      ElementPlus.ElMessage.success(isAudited===1?'已通过':'已驳回');
+    };
+    const replyReview = async (row) => {
+      try{
+        const {value} = await ElementPlus.ElMessageBox.prompt('请输入回复内容','商家回复',{inputType:'textarea'});
+        if(value){ await adminApi.replyReview(row.id, value); loadReviews(); ElementPlus.ElMessage.success('已回复'); }
+      }catch(e){}
+    };
+
+    const logout = () => { localStorage.removeItem('adminToken'); localStorage.removeItem('adminInfo'); location.href='/admin/login.html'; };
+    const goLogin = () => { location.href='/admin/login.html'; };
+
+    return { loading, admin, tab, stats, products, pKeyword, orders, users, coupons, reviews, editVisible, editForm, deliverVisible, deliverForm, couponVisible, couponForm,
+      loadProducts, toggleShelve, editProduct, saveProduct, loadOrders, showDeliver, doDeliver, loadUsers, toggleUser, loadCoupons, showCouponForm, saveCoupon, delCoupon, loadReviews, auditReview, replyReview, logout, goLogin };
+  }
+};
+const app = createApp(App); app.use(ElementPlus); app.mount('#app');
+</script>
+</body>
+</html>

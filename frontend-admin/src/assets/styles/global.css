@@ -1,0 +1,234 @@
+/* ============================================
+   global.css - 观锦阁管理后台全局样式
+   管理后台风格：深色侧边栏 + 白色内容区
+   ============================================ */
+
+/* ----- CSS 变量：主题色系 ----- */
+:root {
+  --sidebar-width: 220px;             /* 侧边栏展开宽度 */
+  --sidebar-collapse-width: 64px;     /* 侧边栏折叠宽度 */
+  --sidebar-bg: #1d1e2c;              /* 侧边栏深色背景 */
+  --sidebar-text: #bfcbd9;            /* 侧边栏文字颜色 */
+  --sidebar-hover: #2d2f3e;           /* 侧边栏 hover 颜色 */
+  --sidebar-active: #409eff;          /* 侧边栏选中高亮 */
+  --header-height: 60px;              /* 顶部栏高度 */
+  --content-bg: #f0f2f5;              /* 内容区域背景灰 */
+  --card-bg: #ffffff;                 /* 卡片白色背景 */
+  --primary-color: #409eff;           /* Element Plus 主色 */
+  --text-primary: #303133;            /* 主文字色 */
+  --text-regular: #606266;            /* 常规文字色 */
+  --border-color: #ebeef5;            /* 边框色 */
+}
+
+/* ----- 基础重置 ----- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  width: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+  color: var(--text-primary);
+  background: var(--content-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 链接样式 */
+a {
+  text-decoration: none;
+  color: var(--primary-color);
+}
+
+/* ----- 内容区外层容器 ----- */
+.app-main {
+  padding: 20px;
+  min-height: calc(100vh - var(--header-height));
+  background: var(--content-bg);
+}
+
+/* ----- 卡片样式 ----- */
+.card-container {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+}
+
+.card-container .card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ----- 表格通用样式 ----- */
+.el-table {
+  border-radius: 4px;
+}
+
+.el-table th.el-table__cell {
+  background-color: #fafafa;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ----- 搜索栏样式 ----- */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.search-bar .el-input,
+.search-bar .el-select {
+  width: 200px;
+}
+
+/* ----- 统计卡片样式 (Dashboard 用) ----- */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  padding: 24px;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.stat-card:nth-child(2) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 4px 16px rgba(245, 87, 108, 0.3);
+}
+
+.stat-card:nth-child(3) {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3);
+}
+
+.stat-card:nth-child(4) {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.3);
+}
+
+.stat-card .stat-label {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* ----- 图表容器 ----- */
+.chart-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.chart-box {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.chart-box .chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+/* ----- 表单相关样式 ----- */
+.form-section {
+  max-width: 600px;
+}
+
+/* ----- 状态标签弹性样式 ----- */
+.status-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* ----- Element Plus 暗色菜单变量覆盖 ----- */
+.el-menu--dark {
+  background-color: var(--sidebar-bg) !important;
+}
+
+.el-menu--dark .el-menu-item,
+.el-menu--dark .el-sub-menu__title {
+  color: var(--sidebar-text) !important;
+}
+
+.el-menu--dark .el-menu-item:hover,
+.el-menu--dark .el-sub-menu__title:hover {
+  background-color: var(--sidebar-hover) !important;
+  color: #ffffff !important;
+}
+
+.el-menu--dark .el-menu-item.is-active {
+  color: var(--sidebar-active) !important;
+}
+
+/* ----- 通用工具样式 ----- */
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.no-image {
+  color: #c0c4cc;
+  font-size: 12px;
+}
+
+.amount-text {
+  font-weight: 600;
+  color: #e6a23c;
+}
+
+.price-text {
+  font-weight: 600;
+  color: #e6a23c;
+}
+
+/* ----- 响应式 ----- */
+@media (max-width: 1200px) {
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .chart-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .stat-cards {
+    grid-template-columns: 1fr;
+  }
+  .search-bar .el-input,
+  .search-bar .el-select {
+    width: 100%;
+  }
+}

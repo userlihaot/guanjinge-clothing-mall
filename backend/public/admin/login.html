@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理员登录 - 观锦阁</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.login-card{width:380px;background:#fff;border-radius:12px;padding:40px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.login-card h1{text-align:center;color:#8B4513;font-size:28px;margin-bottom:8px}
+.login-card .sub{text-align:center;color:#999;margin-bottom:30px;font-size:14px}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="login-card">
+  <h1>观锦阁</h1>
+  <div class="sub">管理后台</div>
+  <el-form :model="form">
+    <el-form-item><el-input v-model="form.username" placeholder="管理员账号" prefix-icon="UserFilled"></el-input></el-form-item>
+    <el-form-item><el-input v-model="form.password" type="password" placeholder="管理员密码" prefix-icon="Lock" show-password @keyup.enter="login"></el-input></el-form-item>
+    <el-button type="primary" style="width:100%;background:#8B4513;border-color:#8B4513" @click="login" :loading="loading">登 录</el-button>
+  </el-form>
+  <div style="text-align:center;margin-top:16px;font-size:12px;color:#999">默认账号: admin / admin123</div>
+</div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/api.js"></script>
+<script>
+const { createApp, ref, reactive } = Vue;
+const App = {
+  setup() {
+    const form = reactive({ username:'', password:'' });
+    const loading = ref(false);
+    const login = async () => {
+      if(!form.username||!form.password) return ElementPlus.ElMessage.warning('请填写完整');
+      loading.value=true;
+      try{
+        const res = await adminApi.login(form);
+        if(res.code===200){
+          localStorage.setItem('adminToken',res.data.token);
+          localStorage.setItem('adminInfo',JSON.stringify(res.data));
+          location.href='/admin/';
+        } else ElementPlus.ElMessage.error(res.message);
+      }catch(e){ElementPlus.ElMessage.error('登录失败')}
+      loading.value=false;
+    };
+    return {form,loading,login};
+  }
+};
+const app=createApp(App);app.use(ElementPlus);app.mount('#app');
+</script>
+</body>
+</html>

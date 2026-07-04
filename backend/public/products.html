@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商品列表 - 观锦阁</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="app">
+<header class="header"><div class="header-inner">
+  <div class="logo" onclick="location.href='/'" style="cursor:pointer">观锦阁<span>| 匠心传承</span></div>
+  <div class="actions"><a href="/login.html" style="color:var(--gold)">登录</a></div>
+</div></header>
+
+<div class="container" style="display:flex;gap:20px;padding-top:20px">
+  <!-- 筛选侧边栏 -->
+  <div style="width:220px;background:#fff;border-radius:8px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+    <h3 style="margin-bottom:16px;color:var(--primary)">筛选条件</h3>
+    <el-radio-group v-model="filters.categoryId" @change="doSearch" size="small">
+      <el-radio-button label="">全部</el-radio-button>
+      <el-radio-button label="1">唐制</el-radio-button>
+      <el-radio-button label="2">宋制</el-radio-button>
+      <el-radio-button label="3">明制</el-radio-button>
+      <el-radio-button label="5">配饰</el-radio-button>
+    </el-radio-group>
+    <div style="margin:16px 0"><strong>价格区间</strong></div>
+    <el-slider v-model="filters.priceRange" range :min="0" :max="2000" @change="doSearch" style="padding:0 8px"></el-slider>
+    <div style="font-size:13px;color:#999">¥{{filters.priceRange[0]}} - ¥{{filters.priceRange[1]}}</div>
+    <div style="margin:16px 0"><strong>排序</strong></div>
+    <el-radio-group v-model="filters.sortBy" @change="doSearch" size="small">
+      <el-radio-button value="sales">销量</el-radio-button>
+      <el-radio-button value="price_asc">价格↑</el-radio-button>
+      <el-radio-button value="price_desc">价格↓</el-radio-button>
+      <el-radio-button value="newest">最新</el-radio-button>
+    </el-radio-group>
+  </div>
+  <!-- 商品列表 -->
+  <div style="flex:1">
+    <div style="margin-bottom:16px;color:#999">共 {{ total }} 件商品</div>
+    <div class="product-grid">
+      <div class="product-card" v-for="p in products" :key="p.id" @click="goDetail(p.id)">
+        <img :src="p.cover_image" :alt="p.name" loading="lazy" style="height:280px">
+        <div class="info">
+          <div class="name">{{ p.name }}</div>
+          <div class="price">¥{{ p.promotion_price||p.price }}<span class="original" v-if="p.promotion_price">¥{{p.price}}</span></div>
+          <div class="sales">已售 {{p.sales_count}} 件</div>
+        </div>
+      </div>
+    </div>
+    <div v-if="!products.length" style="text-align:center;padding:80px;color:#999">暂无商品</div>
+    <div style="text-align:center;margin-top:30px">
+      <el-pagination background layout="prev,pager,next" :total="total" :page-size="12" v-model:current-page="page" @current-change="doSearch"></el-pagination>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/api.js"></script>
+<script>
+const { createApp, ref, reactive, onMounted } = Vue;
+const App = {
+  setup() {
+    const products = ref([]);
+    const total = ref(0);
+    const page = ref(1);
+    const filters = reactive({
+      categoryId: '', dynasty: '', priceRange: [0, 2000], sortBy: 'sales', keyword: ''
+    });
+
+    // 从 URL 获取初始筛选参数
+    const params = new URLSearchParams(location.search);
+    if (params.get('category')) filters.categoryId = params.get('category');
+    if (params.get('dynasty')) filters.dynasty = params.get('dynasty');
+    if (params.get('keyword')) filters.keyword = params.get('keyword');
+
+    const doSearch = async () => {
+      const res = await productApi.getList({
+        categoryId: filters.categoryId || undefined,
+        dynasty: filters.dynasty || undefined,
+        minPrice: filters.priceRange[0] || undefined,
+        maxPrice: filters.priceRange[1] < 2000 ? filters.priceRange[1] : undefined,
+        keyword: filters.keyword || undefined,
+        sortBy: filters.sortBy,
+        page: page.value,
+        size: 12
+      });
+      if (res.code === 200) {
+        products.value = res.data.records;
+        total.value = res.data.total;
+      }
+    };
+
+    onMounted(doSearch);
+
+    return {
+      products, total, page, filters,
+      doSearch,
+      goDetail(id) { location.href = '/product.html?id=' + id; }
+    };
+  }
+};
+const app = createApp(App); app.use(ElementPlus); app.mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录注册 - 观锦阁</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.login-page { min-height:100vh; display:flex; background:linear-gradient(135deg,#3C2415,#5D4037); }
+.login-left { flex:1; display:flex;align-items:center;justify-content:center; color:#fff; padding:60px; }
+.login-left h1 { font-size:52px; letter-spacing:12px; color:var(--gold); }
+.login-left p { font-size:18px; margin-top:16px; opacity:.8; }
+.login-right { width:440px; background:#fff; padding:50px 40px; display:flex;flex-direction:column;justify-content:center; }
+@media (max-width:768px) { .login-left{display:none} .login-right{width:100%} }
+</style>
+</head>
+<body>
+<div id="app">
+<div class="login-page">
+  <div class="login-left">
+    <div>
+      <h1>观锦阁</h1>
+      <p>匠心传承 · 锦绣中华</p>
+      <p style="margin-top:30px;font-size:14px;opacity:.6">一袭汉服，穿越千年</p>
+    </div>
+  </div>
+  <div class="login-right">
+    <el-tabs v-model="activeTab" stretch>
+      <el-tab-pane label="密码登录" name="pwd">
+        <el-form :model="loginForm" label-position="top">
+          <el-form-item label="手机号"><el-input v-model="loginForm.phone" placeholder="请输入手机号"></el-input></el-form-item>
+          <el-form-item label="密码"><el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password></el-input></el-form-item>
+          <el-button type="primary" style="width:100%;background:var(--primary)" @click="loginByPwd" :loading="loading">登 录</el-button>
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="短信登录" name="sms">
+        <el-form :model="smsForm" label-position="top">
+          <el-form-item label="手机号"><el-input v-model="smsForm.phone" placeholder="请输入手机号"></el-input></el-form-item>
+          <el-form-item label="验证码">
+            <div style="display:flex;gap:10px">
+              <el-input v-model="smsForm.code" placeholder="验证码"></el-input>
+              <el-button :disabled="countdown>0" @click="sendSms">{{ countdown>0 ? countdown+'s' : '获取验证码' }}</el-button>
+            </div>
+          </el-form-item>
+          <el-button type="primary" style="width:100%;background:var(--primary)" @click="loginBySms" :loading="loading">登 录</el-button>
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="注册" name="reg">
+        <el-form :model="regForm" label-position="top">
+          <el-form-item label="用户名"><el-input v-model="regForm.username" placeholder="请输入用户名"></el-input></el-form-item>
+          <el-form-item label="手机号"><el-input v-model="regForm.phone" placeholder="请输入手机号"></el-input></el-form-item>
+          <el-form-item label="密码"><el-input v-model="regForm.password" type="password" placeholder="请输入密码"></el-input></el-form-item>
+          <el-form-item label="昵称"><el-input v-model="regForm.nickname" placeholder="请输入昵称"></el-input></el-form-item>
+          <el-button type="primary" style="width:100%;background:var(--primary)" @click="register" :loading="loading">注 册</el-button>
+        </el-form>
+      </el-tab-pane>
+    </el-tabs>
+    <div style="text-align:center;margin-top:16px"><a href="/">← 返回首页</a></div>
+  </div>
+</div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script>
+const { createApp, ref, reactive } = Vue;
+const App = {
+  setup() {
+    const activeTab = ref('pwd');
+    const loading = ref(false);
+    const countdown = ref(0);
+    const loginForm = reactive({ phone:'', password:'' });
+    const smsForm = reactive({ phone:'', code:'' });
+    const regForm = reactive({ username:'', phone:'', password:'', nickname:'' });
+
+    const loginByPwd = async () => {
+      if(!loginForm.phone||!loginForm.password) return ElementPlus.ElMessage.warning('请填写完整');
+      loading.value=true;
+      try {
+        const res = await userApi.loginByPassword(loginForm);
+        if(res.code===200){ Auth.setToken(res.data.token); Auth.setUser(res.data); location.href='/'; }
+        else ElementPlus.ElMessage.error(res.message);
+      }catch(e){ElementPlus.ElMessage.error('登录失败')}
+      loading.value=false;
+    };
+
+    const sendSms = async () => {
+      if(!smsForm.phone) return ElementPlus.ElMessage.warning('请输入手机号');
+      await userApi.sendSms(smsForm.phone);
+      ElementPlus.ElMessage.success('验证码已发送（模拟：查看浏览器控制台）');
+      countdown.value=60;
+      const timer=setInterval(()=>{countdown.value--;if(countdown.value<=0)clearInterval(timer)},1000);
+    };
+
+    const loginBySms = async () => {
+      if(!smsForm.phone||!smsForm.code) return ElementPlus.ElMessage.warning('请填写完整');
+      loading.value=true;
+      try{
+        const res=await userApi.loginBySms(smsForm);
+        if(res.code===200){ Auth.setToken(res.data.token); Auth.setUser(res.data); location.href='/'; }
+        else ElementPlus.ElMessage.error(res.message);
+      }catch(e){ElementPlus.ElMessage.error('登录失败')}
+      loading.value=false;
+    };
+
+    const register = async () => {
+      if(!regForm.username||!regForm.phone||!regForm.password) return ElementPlus.ElMessage.warning('请填写完整');
+      loading.value=true;
+      try{
+        const res=await userApi.register(regForm);
+        if(res.code===200){ElementPlus.ElMessage.success('注册成功，请登录');activeTab.value='pwd'}
+        else ElementPlus.ElMessage.error(res.message);
+      }catch(e){ElementPlus.ElMessage.error('注册失败')}
+      loading.value=false;
+    };
+
+    return {activeTab,loading,countdown,loginForm,smsForm,regForm,loginByPwd,sendSms,loginBySms,register};
+  }
+};
+const app=createApp(App);app.use(ElementPlus);app.mount('#app');
+</script>
+</body>
+</html>

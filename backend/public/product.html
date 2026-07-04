@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商品详情 - 观锦阁</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.detail-page{display:flex;gap:40px}.detail-left{width:480px}.detail-left .main-img{width:100%;height:480px;object-fit:cover;border-radius:8px}.detail-left .thumb-list{display:flex;gap:10px;margin-top:10px}.detail-left .thumb{width:80px;height:80px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent}.detail-left .thumb.active{border-color:var(--primary)}.detail-right{flex:1}.detail-right h1{font-size:24px;color:var(--text)}.detail-right .subtitle{color:#999;margin:8px 0}.detail-right .price-box{margin:16px 0;padding:16px;background:var(--bg-cream);border-radius:8px}.detail-right .price-now{font-size:32px;color:var(--red);font-weight:bold}.detail-right .price-old{color:#999;text-decoration:line-through;margin-left:12px}.detail-right .tags{margin:12px 0}.detail-right .qty{margin:16px 0}.detail-right .actions{display:flex;gap:10px;margin:20px 0}@media(max-width:768px){.detail-page{flex-direction:column}.detail-left{width:100%}}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="header"><div class="header-inner">
+  <div class="logo" onclick="location.href='/'" style="cursor:pointer">观锦阁<span>| 匠心传承</span></div>
+  <div class="actions">
+    <template v-if="Auth.isLoggedIn()">
+      <el-button @click="goCart" icon="ShoppingCart" size="small">购物车</el-button>
+    </template>
+    <a href="/login.html" style="color:var(--gold)" v-else>登录</a>
+  </div>
+</div></header>
+
+<div class="container" style="padding-top:20px" v-if="product">
+  <el-breadcrumb separator="/">
+    <el-breadcrumb-item :to="{path:'/'}">首页</el-breadcrumb-item>
+    <el-breadcrumb-item :to="{path:'/products.html',query:{category:product.category_id}}">{{product.category_name}}</el-breadcrumb-item>
+    <el-breadcrumb-item>{{product.name}}</el-breadcrumb-item>
+  </el-breadcrumb>
+
+  <div class="detail-page" style="margin-top:20px">
+    <div class="detail-left">
+      <img :src="currentImage" class="main-img" :alt="product.name">
+      <div class="thumb-list">
+        <img v-for="(img,i) in product.imageList" :key="i" :src="img" class="thumb" :class="{active:currentImage===img}" @click="currentImage=img">
+      </div>
+    </div>
+    <div class="detail-right">
+      <h1>{{ product.name }}</h1>
+      <div class="subtitle">{{ product.subtitle }}</div>
+      <div class="price-box">
+        <span class="price-now">¥{{ product.promotion_price || product.price }}</span>
+        <span class="price-old" v-if="product.promotion_price">¥{{ product.price }}</span>
+        <span style="margin-left:12px;color:#999">已售 {{product.sales_count}} 件</span>
+      </div>
+      <div class="tags">
+        <el-tag v-if="product.dynasty">{{ product.dynasty }}</el-tag>
+        <el-tag type="info" v-if="product.fabric">{{ product.fabric }}</el-tag>
+        <el-tag type="warning" v-if="product.craft">{{ product.craft }}</el-tag>
+        <span style="margin-left:8px;color:var(--gold)">★ {{product.avgStar}} ({{product.reviewCount}}条评价)</span>
+      </div>
+      <!-- SKU选择 -->
+      <div v-if="product.skuList&&product.skuList.length" style="margin:16px 0">
+        <div style="font-weight:bold;margin-bottom:8px">规格选择</div>
+        <el-radio-group v-model="selectedSkuId" size="small">
+          <el-radio-button v-for="sku in product.skuList" :key="sku.id" :value="sku.id" :disabled="sku.stock<=0">
+            {{ sku.sku_name }} (¥{{sku.price}})
+          </el-radio-button>
+        </el-radio-group>
+        <div style="font-size:12px;color:var(--red);margin-top:4px" v-if="selectedSku">
+          库存: {{ selectedSku.stock }} 件
+        </div>
+      </div>
+      <!-- 数量 -->
+      <div class="qty">
+        <span style="font-weight:bold">数量：</span>
+        <el-input-number v-model="quantity" :min="1" :max="maxStock" size="small"></el-input-number>
+        <span style="margin-left:8px;color:#999">库存 {{maxStock}} 件</span>
+      </div>
+      <!-- 操作按钮 -->
+      <div class="actions">
+        <el-button type="danger" size="large" @click="addToCart" style="background:var(--red);border-color:var(--red)">加入购物车</el-button>
+        <el-button type="warning" size="large" @click="buyNow">立即购买</el-button>
+        <el-button size="large" @click="toggleFav" :type="favorited?'primary':''">{{favorited?'❤ 已收藏':'♡ 收藏'}}</el-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商品详情/评价 -->
+  <el-tabs style="margin-top:40px">
+    <el-tab-pane label="商品详情">
+      <div v-html="product.description" style="padding:20px;line-height:2"></div>
+    </el-tab-pane>
+    <el-tab-pane label="买家评价">
+      <div v-if="reviews.length">
+        <div v-for="r in reviews" :key="r.id" style="padding:16px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:bold">{{r.is_anonymous?'匿名用户':r.nickname}}</span>
+            <span style="color:var(--gold)">{{'★'.repeat(r.star)}}</span>
+            <span style="color:#999;font-size:12px">{{r.create_time}}</span>
+          </div>
+          <div style="margin:8px 0">{{r.content}}</div>
+          <div v-if="r.images" style="display:flex;gap:8px">
+            <img v-for="img in r.images.split(',')" :src="img" style="width:80px;height:80px;object-fit:cover;border-radius:4px">
+          </div>
+          <div v-if="r.seller_reply" style="margin-top:8px;padding:8px 12px;background:var(--bg-cream);border-radius:4px;font-size:13px">
+            <strong>商家回复：</strong>{{r.seller_reply}}
+          </div>
+        </div>
+      </div>
+      <div v-else style="text-align:center;padding:40px;color:#999">暂无评价</div>
+    </el-tab-pane>
+  </el-tabs>
+</div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+const params = new URLSearchParams(location.search);
+const productId = params.get('id');
+
+const App = {
+  setup() {
+    const product = ref(null);
+    const currentImage = ref('');
+    const selectedSkuId = ref(null);
+    const quantity = ref(1);
+    const favorited = ref(false);
+    const reviews = ref([]);
+
+    const selectedSku = computed(() => {
+      if (!product.value || !selectedSkuId.value) return null;
+      return product.value.skuList.find(s => s.id === selectedSkuId.value);
+    });
+
+    const maxStock = computed(() => {
+      if (selectedSku.value) return selectedSku.value.stock;
+      return product.value ? product.value.stock : 1;
+    });
+
+    onMounted(async () => {
+      if (!productId) { ElementPlus.ElMessage.error('商品不存在'); return; }
+      try {
+        const res = await productApi.getDetail(productId);
+        if (res.code === 200) {
+          product.value = res.data;
+          currentImage.value = res.data.cover_image;
+          if (res.data.skuList && res.data.skuList.length) {
+            const inStock = res.data.skuList.find(s => s.stock > 0);
+            if (inStock) selectedSkuId.value = inStock.id;
+          }
+        }
+        const favRes = await favoriteApi.check(productId);
+        if (favRes.code === 200) favorited.value = favRes.data.favorited;
+        const revRes = await reviewApi.getProductReviews(productId, { size: 10 });
+        if (revRes.code === 200) reviews.value = revRes.data.records;
+      } catch(e) { console.error(e); }
+    });
+
+    const addToCart = async () => {
+      if (!Auth.isLoggedIn()) { location.href = '/login.html'; return; }
+      try {
+        const res = await cartApi.add({ productId, skuId: selectedSkuId.value, quantity: quantity.value });
+        if (res.code === 200) ElementPlus.ElMessage.success('已加入购物车');
+        else ElementPlus.ElMessage.error(res.message);
+      } catch(e) { ElementPlus.ElMessage.error('操作失败'); }
+    };
+
+    const buyNow = async () => {
+      await addToCart();
+      location.href = '/cart.html';
+    };
+
+    const toggleFav = async () => {
+      if (!Auth.isLoggedIn()) { location.href = '/login.html'; return; }
+      const res = await favoriteApi.toggle(productId);
+      if (res.code === 200) { favorited.value = res.data.favorited; ElementPlus.ElMessage.success(res.message); }
+    };
+
+    return { product, currentImage, selectedSkuId, quantity, favorited, reviews, selectedSku, maxStock, addToCart, buyNow, toggleFav, goCart() { location.href='/cart.html'; }, Auth };
+  }
+};
+const app = createApp(App); app.use(ElementPlus); app.mount('#app');
+</script>
+</body>
+</html>

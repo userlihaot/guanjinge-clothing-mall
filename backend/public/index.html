@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>观锦阁 - 古装服饰商城</title>
+<!-- Element Plus CSS -->
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <!-- 顶部导航 -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo" @click="goHome" style="cursor:pointer">观锦阁<span>| 匠心传承</span></div>
+      <nav class="nav">
+        <a href="/" class="active">首页</a>
+        <a :href="'/products.html?dynasty=唐'">唐制</a>
+        <a :href="'/products.html?dynasty=宋'">宋制</a>
+        <a :href="'/products.html?dynasty=明'">明制</a>
+        <a :href="'/products.html?category=4'">婚服</a>
+        <a :href="'/products.html?category=5'">配饰</a>
+        <a :href="'/products.html?category=6'">改良</a>
+      </nav>
+      <div class="actions">
+        <el-input v-model="keyword" placeholder="搜索古装..." size="small" style="width:160px" @keyup.enter="search">
+          <template #append><el-button @click="search" icon="Search"></el-button></template>
+        </el-input>
+        <template v-if="user">
+          <el-dropdown>
+            <span style="color:#fff;cursor:pointer">{{ user.nickname }} ▼</span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="goProfile">个人中心</el-dropdown-item>
+                <el-dropdown-item @click="goOrders">我的订单</el-dropdown-item>
+                <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-badge :value="cartCount" :hidden="!cartCount">
+            <el-button @click="goCart" icon="ShoppingCart" circle size="small"></el-button>
+          </el-badge>
+        </template>
+        <template v-else>
+          <a href="/login.html" style="color:var(--gold)">登录</a>
+        </template>
+      </div>
+    </div>
+  </header>
+
+  <!-- Banner轮播 -->
+  <div class="container" style="padding-top:20px">
+    <el-carousel height="380px" :interval="4000" v-if="banners.length">
+      <el-carousel-item v-for="b in banners" :key="b.id">
+        <div :style="b.bgStyle" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:12px">
+          <div style="text-align:center;color:#fff">
+            <h1 style="font-size:48px;text-shadow:2px 2px 8px rgba(0,0,0,.5);letter-spacing:8px">{{ b.title }}</h1>
+            <p style="font-size:18px;margin-top:12px;opacity:.9">{{ b.subtitle }}</p>
+          </div>
+        </div>
+      </el-carousel-item>
+    </el-carousel>
+  </div>
+
+  <!-- 分类导航 -->
+  <div class="container">
+    <div class="category-nav">
+      <div class="cat-item" v-for="c in categories" :key="c.id" @click="goCategory(c)">
+        <div class="icon">{{ c.icon }}</div>
+        <div class="name">{{ c.name }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 热销爆款 -->
+  <div class="container" v-if="hotProducts.length">
+    <div class="section-title">🔥 爆款热销</div>
+    <div class="product-grid">
+      <div class="product-card" v-for="p in hotProducts" :key="p.id" @click="goDetail(p.id)">
+        <img :src="p.cover_image" :alt="p.name" loading="lazy">
+        <div class="info">
+          <div class="name">{{ p.name }}</div>
+          <div class="price">¥{{ p.promotion_price || p.price }}<span class="original" v-if="p.promotion_price">¥{{ p.price }}</span></div>
+          <div class="sales">已售 {{ p.sales_count }} 件</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新品上市 -->
+  <div class="container" v-if="newProducts.length">
+    <div class="section-title">🌸 新品上市</div>
+    <div class="product-grid">
+      <div class="product-card" v-for="p in newProducts" :key="p.id" @click="goDetail(p.id)">
+        <img :src="p.cover_image" :alt="p.name" loading="lazy">
+        <div class="info">
+          <div class="name">{{ p.name }}</div>
+          <div class="price">¥{{ p.promotion_price || p.price }}<span class="original" v-if="p.promotion_price">¥{{ p.price }}</span></div>
+          <div class="sales">已售 {{ p.sales_count }} 件</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 品牌介绍 -->
+  <div class="container" style="text-align:center;padding:40px 20px">
+    <h2 style="color:var(--primary);font-size:28px;margin-bottom:16px">观锦阁 · 匠心传承</h2>
+    <p style="color:var(--text-light);max-width:600px;margin:0 auto;line-height:2">
+      观锦阁致力于传承中华传统服饰文化，专注汉服、唐制、宋制、明制古装设计与制作。<br>
+      精选真丝、织锦、天丝等优质面料，手工刺绣、盘金绣、妆花织金等非遗工艺，<br>
+      让每一件古装都承载千年风华，再现锦绣中华。
+    </p>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div><h4>购物指南</h4><a href="#">购物流程</a><a href="#">会员介绍</a><a href="#">常见问题</a></div>
+      <div><h4>售后服务</h4><a href="#">退换货政策</a><a href="#">尺码参考</a><a href="#">面料科普</a></div>
+      <div><h4>关于我们</h4><a href="#">品牌故事</a><a href="#">联系我们</a></div>
+      <div><h4>客服中心</h4><p style="font-size:14px">📞 400-888-8888</p><p style="font-size:14px">🕐 9:00 - 21:00</p></div>
+    </div>
+    <div class="copyright">© 2025 观锦阁 版权所有 | 匠心传承，锦绣中华</div>
+  </footer>
+</div>
+
+<!-- Vue3 + Element Plus + Axios CDN -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+<script src="https://unpkg.com/element-plus/dist/locale/zh-cn.mjs" type="module"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+const App = {
+  setup() {
+    const keyword = ref('');
+    const user = ref(Auth.getUser());
+    const banners = ref([]);
+    const categories = ref([
+      { id:1, name:'唐制汉服', icon:'👘' },
+      { id:2, name:'宋制汉服', icon:'🎋' },
+      { id:3, name:'明制汉服', icon:'🏮' },
+      { id:4, name:'古风婚服', icon:'💒' },
+      { id:5, name:'古风配饰', icon:'💎' },
+      { id:6, name:'改良古装', icon:'✨' },
+      { id:7, name:'演出服', icon:'🎭' },
+    ]);
+    const hotProducts = ref([]);
+    const newProducts = ref([]);
+    const cartCount = ref(0);
+
+    const bannerStyles = [
+      'background:linear-gradient(135deg,#8B0000,#CD5C5C)',
+      'background:linear-gradient(135deg,#6B4226,#D4A574)',
+      'background:linear-gradient(135deg,#2F1B14,#8B4513)',
+    ];
+
+    onMounted(async () => {
+      try {
+        // 加载轮播图
+        const bannerRes = await bannerApi.getActive();
+        if (bannerRes.code === 200 && bannerRes.data.length) {
+          banners.value = bannerRes.data.map((b, i) => ({
+            ...b,
+            bgStyle: bannerStyles[i % 3],
+            subtitle: i === 0 ? '盛唐气韵 · 华丽飘逸' : i === 1 ? '清雅婉约 · 宋风雅韵' : '明制华章 · 端庄典雅'
+          }));
+        } else {
+          banners.value = [
+            { id:1, title:'唐风大赏', bgStyle:bannerStyles[0], subtitle:'盛唐气韵 · 华丽飘逸' },
+            { id:2, title:'宋制雅韵', bgStyle:bannerStyles[1], subtitle:'清雅婉约 · 宋风雅韵' },
+            { id:3, title:'明制华章', bgStyle:bannerStyles[2], subtitle:'端庄典雅 · 明制经典' },
+          ];
+        }
+        // 加载商品
+        const hotRes = await productApi.getHot();
+        if (hotRes.code === 200) hotProducts.value = hotRes.data;
+        const newRes = await productApi.getNew();
+        if (newRes.code === 200) newProducts.value = newRes.data;
+        // 购物车数量
+        if (Auth.isLoggedIn()) {
+          const cartRes = await cartApi.getList();
+          if (cartRes.code === 200) cartCount.value = cartRes.data.length;
+        }
+      } catch(e) { console.error(e); }
+    });
+
+    return {
+      keyword, user, banners, categories, hotProducts, newProducts, cartCount,
+      search() { if (keyword.value) location.href = '/products.html?keyword=' + encodeURIComponent(keyword.value); },
+      goDetail(id) { location.href = '/product.html?id=' + id; },
+      goCategory(c) { location.href = '/products.html?category=' + c.id; },
+      goHome() { location.href = '/'; },
+      goCart() { location.href = '/cart.html'; },
+      goOrders() { location.href = '/orders.html'; },
+      goProfile() { location.href = '/profile.html'; },
+      logout() { Auth.logout(); location.reload(); }
+    };
+  }
+};
+
+const app = createApp(App);
+app.use(ElementPlus);
+app.mount('#app');
+</script>
+</body>
+</html>
