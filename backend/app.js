@@ -39,8 +39,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // 商品图片（用户手动添加的本地图片）
 app.use('/image', express.static(path.join(__dirname, 'public/image')));
-// 前端静态页面 - 用户商城 + 管理后台
-app.use(express.static(path.join(__dirname, 'public')));
 
 // ============ 路由挂载 ============
 app.use('/api/user', userRoutes);           // 用户模块(注册/登录/个人中心)
@@ -57,9 +55,6 @@ app.use('/api/refund', refundRoutes);       // 退款模块
 app.use('/api/footprint', footprintRoutes); // 浏览足迹模块
 app.use('/api/admin', adminRoutes);         // 管理后台模块
 app.use('/api/file', fileRoutes);           // 文件上传模块
-
-// 管理后台路径重定向
-app.get('/admin', (req, res) => res.redirect('/admin/index.html'));
 
 // ============ 全局错误处理 ============
 app.use((err, req, res, next) => {
