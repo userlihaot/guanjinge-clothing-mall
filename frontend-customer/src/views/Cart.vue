@@ -269,7 +269,7 @@
 
       <template #footer>
         <el-button @click="showCheckoutDialog = false">取消</el-button>
-        <el-button type="primary" :disabled="!selectedAddressId" @click="handleSubmitOrder">
+        <el-button type="primary" :disabled="!selectedAddressId" :loading="submitting" @click="handleSubmitOrder">
           提交订单
         </el-button>
       </template>
@@ -406,7 +406,9 @@ const checkoutCouponDiscount = computed(() => {
   const c = selectedCheckoutCoupon.value
   const subtotal = cartStore.selectedTotalPrice
   if (c.type === 2) {
-    return Math.min(subtotal * (1 - Number(c.reduce_amount) / 100), subtotal)
+    // 折扣券：reduce_amount 存的是"折"，如 8.5 表示八五折（付 85%）
+    // 必须与后端 backend/routes/order.js 的算法保持一致
+    return Math.min(subtotal * (1 - Number(c.reduce_amount) / 10), subtotal)
   }
   return Math.min(Number(c.reduce_amount) || 0, subtotal)
 })
@@ -644,28 +646,41 @@ async function handleSetDefault(addressId) {
 }
 
 // ========== 提交订单 ==========
+// 防重复提交：请求进行中时按钮进入 loading 且忽略再次点击，
+// 否则双击会创建两笔订单并重复核销优惠券
+const submitting = ref(false)
+
 async function handleSubmitOrder() {
+  if (submitting.value) return
+
   if (!selectedAddressId.value) {
     ElMessage.warning('请选择收货地址')
     return
   }
 
+  submitting.value = true
   try {
     const checkoutData = cartStore.getCheckoutData()
-    await orderApi.create({
+    const res = await orderApi.create({
       addressId: selectedAddressId.value,
       cartItemIds: checkoutData.cartIds, // 后端字段名 cartItemIds
       buyerMessage: orderRemark.value,   // 后端字段名 buyerMessage
       couponId: selectedCheckoutCouponId.value || undefined,
     })
-    ElMessage.success('订单提交成功')
-    showCheckoutDialog.value = false
-    // 重新加载购物车
-    await cartStore.fetchCart()
-    // 跳转到订单列表
-    router.push('/orders')
+    // 后端业务失败也是 HTTP 200 + code:400/500，必须判断 code 才能避免"假成功"
+    if (res && res.code === 200) {
+      ElMessage.success('订单提交成功')
+      showCheckoutDialog.value = false
+      // 重新加载购物车
+      await cartStore.fetchCart()
+      // 跳转到订单列表
+      router.push('/orders')
+    }
   } catch (error) {
+    // 失败信息已由响应拦截器统一提示
     console.error('提交订单失败:', error)
+  } finally {
+    submitting.value = false
   }
 }
 

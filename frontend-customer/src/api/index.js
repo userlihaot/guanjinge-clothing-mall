@@ -278,57 +278,9 @@ export const refundApi = {
   },
 }
 
-// ========== 管理员模块 ==========
-export const adminApi = {
-  login(data) { return request.post('/admin/login', data) },
-  getDashboard() { return request.get('/admin/dashboard') },
-  // 商品
-  getProducts(params) { return request.get('/admin/products', { params }) },
-  getProductDetail(id) { return request.get('/admin/products/' + id) },
-  createProduct(data) { return request.post('/admin/products', data) },
-  updateProduct(id, data) { return request.put('/admin/products/' + id, data) },
-  deleteProduct(id) { return request.delete('/admin/products/' + id) },
-  shelve(id) { return request.put('/admin/products/' + id + '/shelve') },
-  unshelve(id) { return request.put('/admin/products/' + id + '/unshelve') },
-  toggleProductStatus(id, status) { return request.put('/admin/products/' + id, { status }) },
-  // 订单
-  getOrders(params) { return request.get('/admin/orders', { params }) },
-  shipOrder(id, data) { return request.put('/admin/orders/' + id + '/deliver', data) },
-  deliver: (orderNo, data) => request.put('/admin/orders/' + orderNo + '/deliver', data),
-  // 用户
-  getUsers(params) { return request.get('/admin/users', { params }) },
-  toggleUserStatus(id) { return request.put('/admin/users/' + id + '/status') },
-  // 优惠券
-  getCoupons() { return request.get('/admin/coupons') },
-  createCoupon(data) { return request.post('/admin/coupons', data) },
-  deleteCoupon(id) { return request.delete('/admin/coupons/' + id) },
-  // 轮播图
-  getBanners() { return request.get('/admin/banners') },
-  createBanner(data) { return request.post('/admin/banners', data) },
-  updateBanner(id, data) { return request.put('/admin/banners/' + id, data) },
-  deleteBanner(id) { return request.delete('/admin/banners/' + id) },
-  // 评价
-  getReviews(params) { return request.get('/admin/reviews', { params }) },
-  auditReview(id, isAudited) { return request.put('/admin/reviews/' + id + '/audit', { isAudited }) },
-  approveReview(id) { return request.put('/admin/reviews/' + id + '/audit', { isAudited: 1 }) },
-  rejectReview(id) { return request.put('/admin/reviews/' + id + '/audit', { isAudited: 2 }) },
-  replyReview(id, reply) { return request.put('/admin/reviews/' + id + '/reply', { reply }) },
-  // 退款
-  getRefunds(params) { return request.get('/admin/refunds', { params }) },
-  handleRefund(id, data) { return request.put('/admin/refunds/' + id + '/handle', data) },
-  approveRefund(id) { return request.put('/admin/refunds/' + id + '/handle', { status: 1 }) },
-  rejectRefund(id, reason) { return request.put('/admin/refunds/' + id + '/handle', { status: 2, refuseReason: reason }) },
-  // 分类管理
-  getCategories() { return request.get('/admin/categories') },
-  createCategory(data) { return request.post('/admin/categories', data) },
-  updateCategory(id, data) { return request.put('/admin/categories/' + id, data) },
-  deleteCategory(id) { return request.delete('/admin/categories/' + id) },
-  // 设置
-  getSettings() { return request.get('/admin/settings') },
-  saveSettings(data) { return request.put('/admin/settings', data) },
-  // 修改密码
-  changePassword(data) { return request.put('/admin/change-password', data) },
-}
+// 说明：管理后台相关接口（adminApi）原先也放在这里，供客户端内置的
+// src/views/admin/ 重复后台使用。该重复后台已删除，管理端请使用独立的
+// frontend-admin 应用（它有自己的 src/api/index.js）。
 
 // 默认导出所有 API 模块
 export default {
@@ -343,5 +295,4 @@ export default {
   couponApi,
   bannerApi,
   refundApi,
-  adminApi,
 }

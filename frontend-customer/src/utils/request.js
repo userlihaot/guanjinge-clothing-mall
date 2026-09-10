@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { getToken, getAdminToken, removeToken } from './auth'
+import { getToken, removeToken, removeUser } from './auth'
 
 // 创建 Axios 实例，配置统一的基础 URL 和超时时间
 const request = axios.create({
@@ -11,18 +11,57 @@ const request = axios.create({
   },
 })
 
+// ============ 登录态失效处理 ============
+
+// 避免并发请求同时 401 时重复弹提示 / 重复跳转
+let handlingUnauthorized = false
+
+/**
+ * 清理登录态并跳转到登录页，同时带上 redirect 以便登录后跳回原页面。
+ *
+ * 这里必须同时清掉 Pinia 持久化在 localStorage 里的 store：
+ * 只删 token 的话，顶栏仍会显示"已登录"的头像和昵称。
+ */
+async function handleUnauthorized() {
+  if (handlingUnauthorized) return
+  handlingUnauthorized = true
+
+  const currentPath = (window.location.hash || '').replace(/^#/, '') || '/'
+
+  removeToken()
+  removeUser()
+  try {
+    localStorage.removeItem('guanjinge-user-store')
+  } catch { /* 忽略隐私模式下的异常 */ }
+
+  try {
+    const { useUserStore } = await import('@/stores/user')
+    useUserStore().logout()
+    if (currentPath !== '/login') {
+      const { default: router } = await import('@/router')
+      router.replace({ path: '/login', query: { redirect: currentPath } })
+    }
+  } catch (err) {
+    // 兜底：动态 import 失败时退回 hash 跳转
+    console.error('处理登录失效失败，回退到直接跳转:', err)
+    window.location.hash = `#/login?redirect=${encodeURIComponent(currentPath)}`
+  } finally {
+    setTimeout(() => {
+      handlingUnauthorized = false
+    }, 1000)
+  }
+}
+
 // ============ 请求拦截器 ============
 request.interceptors.request.use(
   (config) => {
-    // 优先用户 token，其次管理员 token（管理员后台也需要鉴权）
-    const token = getToken() || getAdminToken()
+    const token = getToken()
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
     }
     return config
   },
   (error) => {
-    // 请求错误处理
     console.error('请求发送失败:', error)
     return Promise.reject(error)
   }
@@ -31,61 +70,57 @@ request.interceptors.request.use(
 // ============ 响应拦截器 ============
 request.interceptors.response.use(
   (response) => {
-    // 提取后端返回的数据
-    const res = response.data
-
     // 如果后端返回的是文件流（Blob），直接返回
     if (response.config.responseType === 'blob') {
       return response
     }
 
-    // 统一处理业务状态码（假定后端返回格式为 { code, msg, data }）
-    // code === 200 表示成功，直接返回 data
-    // 其他情况由各业务模块自行处理
+    const res = response.data
+
+    // 关键：后端所有业务失败都是 HTTP 200 + { code: 400/500, message, data }。
+    // axios 会把它们当成成功响应，所以这里必须手动转成 reject，
+    // 否则 `await api.x()` 在失败时也会 resolve —— 调用方稍不留意就会
+    // "操作失败却提示成功"（例如下单失败仍提示订单提交成功）。
+    if (res && typeof res === 'object' && !Array.isArray(res) && 'code' in res && res.code !== 200) {
+      // 注意后端字段是 message（不是 msg）
+      const message = res.message || '操作失败'
+      ElMessage.error(message)
+      const error = new Error(message)
+      error.code = res.code
+      error.response = response
+      return Promise.reject(error)
+    }
+
+    // code === 200 或非标准结构，直接返回数据
     return res
   },
   (error) => {
-    // 处理 HTTP 响应错误
     if (error.response) {
       const { status, data } = error.response
 
       switch (status) {
         case 400:
-          // 参数错误，显示后端返回的错误信息
-          ElMessage.error(data?.msg || '请求参数有误')
+          ElMessage.error(data?.message || '请求参数有误')
           break
         case 401:
-          // 未登录或 token 过期，清除本地 token 并跳转登录页
-          removeToken()
-          // 避免在登录页重复跳转
-          if (window.location.hash !== '#/login') {
-            ElMessage.warning('登录已过期，请重新登录')
-            // 使用 setTimeout 确保消息提示先显示
-            setTimeout(() => {
-              window.location.hash = '#/login'
-            }, 500)
-          }
+          // 未登录或 token 过期：清理登录态并跳转登录页（保留 redirect）
+          handleUnauthorized()
           break
         case 403:
-          // 无权限访问
-          ElMessage.error('无权执行此操作')
+          ElMessage.error(data?.message || '无权执行此操作')
           break
         case 404:
-          // 资源不存在
-          ElMessage.error('请求的资源不存在')
+          ElMessage.error(data?.message || '请求的资源不存在')
           break
         case 500:
-          // 服务器内部错误
-          ElMessage.error(data?.msg || '服务器繁忙，请稍后再试')
+          ElMessage.error(data?.message || '服务器繁忙，请稍后再试')
           break
         default:
-          ElMessage.error(data?.msg || `请求异常 (${status})`)
+          ElMessage.error(data?.message || `请求异常 (${status})`)
       }
     } else if (error.code === 'ECONNABORTED') {
-      // 请求超时
       ElMessage.error('请求超时，请检查网络连接')
     } else {
-      // 网络错误
       ElMessage.error('网络连接失败，请检查网络')
     }
 

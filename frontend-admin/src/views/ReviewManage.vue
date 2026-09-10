@@ -216,8 +216,10 @@ async function fetchReviews() {
   try {
     const res = await adminApi.getReviews({
       page: pagination.page,
-      pageSize: pagination.pageSize,
-      status: filterStatus.value
+      size: pagination.pageSize,
+      // 后端读的是 isAudited（admin.js:290 → r.is_audited），
+      // 传 status 会被忽略，筛选等于没生效
+      isAudited: filterStatus.value
     })
     if (res.code === 200) {
       reviewList.value = res.data.records || []

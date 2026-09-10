@@ -109,11 +109,18 @@ async function fetchSettings() {
   try {
     const res = await adminApi.getSettings()
     if (res.code === 200 && res.data) {
-      // 将后端数据填充到表单
-      settingsForm.siteName = res.data.siteName || ''
-      settingsForm.freeShippingThreshold = res.data.freeShippingThreshold ?? 0
-      settingsForm.shippingFee = res.data.shippingFee ?? 0
-      settingsForm.paymentTimeout = res.data.paymentTimeout ?? 30
+      // 后端返回的是 [{ config_key, config_value }, ...] 数组，
+      // 且键名是数据库里的 snake_case（site_name / freight_free_threshold /
+      // freight_fee / order_pay_timeout），不是 camelCase。
+      // 直接读 res.data.siteName 会全部是 undefined，表单永远是空的。
+      const map = {}
+      const rows = Array.isArray(res.data) ? res.data : []
+      rows.forEach((r) => { map[r.config_key] = r.config_value })
+
+      settingsForm.siteName = map.site_name ?? ''
+      settingsForm.freeShippingThreshold = Number(map.freight_free_threshold ?? 0)
+      settingsForm.shippingFee = Number(map.freight_fee ?? 0)
+      settingsForm.paymentTimeout = Number(map.order_pay_timeout ?? 30)
     }
   } catch {
     // 错误由拦截器处理
@@ -131,11 +138,13 @@ async function handleSave() {
 
   saveLoading.value = true
   try {
+    // 后端按 config_key 逐条执行 UPDATE ... WHERE config_key=?，
+    // 必须使用数据库里的 snake_case 键名，否则匹配 0 行、不报错、却返回"保存成功"
     const res = await adminApi.saveSettings({
-      siteName: settingsForm.siteName,
-      freeShippingThreshold: settingsForm.freeShippingThreshold,
-      shippingFee: settingsForm.shippingFee,
-      paymentTimeout: settingsForm.paymentTimeout
+      site_name: settingsForm.siteName,
+      freight_free_threshold: String(settingsForm.freeShippingThreshold),
+      freight_fee: String(settingsForm.shippingFee),
+      order_pay_timeout: String(settingsForm.paymentTimeout)
     })
     if (res.code === 200) {
       ElMessage.success('系统设置保存成功')

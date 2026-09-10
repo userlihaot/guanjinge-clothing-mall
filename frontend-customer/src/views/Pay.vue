@@ -44,9 +44,9 @@
               <span>商品总额：</span>
               <span>&yen;{{ Number(orderInfo.total_amount).toFixed(2) }}</span>
             </div>
-            <div class="info-row" v-if="couponDiscount > 0">
+            <div class="info-row" v-if="Number(orderInfo.coupon_discount) > 0">
               <span>优惠券抵扣：</span>
-              <span class="discount-text">-&yen;{{ couponDiscount.toFixed(2) }}</span>
+              <span class="discount-text">-&yen;{{ Number(orderInfo.coupon_discount).toFixed(2) }}</span>
             </div>
             <div class="info-row">
               <span>运费：</span>
@@ -79,40 +79,8 @@
             </div>
           </div>
 
-          <!-- 优惠券选择 -->
-          <div class="pay-card" v-if="orderInfo.status === 0">
-            <h3 class="card-title">优惠券</h3>
-            <div v-if="availableCoupons.length === 0" class="no-coupon">
-              <span class="no-coupon-text">暂无可用优惠券</span>
-            </div>
-            <div v-else class="coupon-list">
-              <div
-                v-for="c in availableCoupons"
-                :key="c.id"
-                class="coupon-item"
-                :class="{ active: selectedCouponId === c.id }"
-                @click="toggleCoupon(c)"
-              >
-                <div class="coupon-left">
-                  <span class="coupon-value">
-                    <template v-if="c.type === 2">{{ c.reduce_amount }}折</template>
-                    <template v-else>¥{{ c.reduce_amount }}</template>
-                  </span>
-                  <span class="coupon-condition" v-if="c.full_amount > 0">
-                    满{{ c.full_amount }}可用
-                  </span>
-                  <span class="coupon-condition" v-else>无门槛</span>
-                </div>
-                <div class="coupon-right">
-                  <p class="coupon-name">{{ c.name }}</p>
-                  <p class="coupon-expire">{{ c.end_time?.slice(0, 10) }} 前可用</p>
-                </div>
-                <el-icon v-if="selectedCouponId === c.id" class="coupon-check" color="#C0392B">
-                  <CircleCheckFilled />
-                </el-icon>
-              </div>
-            </div>
-          </div>
+          <!-- 优惠券在下单时选择并已核销，此处不再重复选择 -->
+          <!-- 后端 /api/pay/do-pay 只接收 { orderNo, payMethod }，支付页传的 couponId 会被忽略 -->
 
           <!-- 支付方式选择 -->
           <div class="pay-card" v-if="orderInfo.status === 0">
@@ -216,7 +184,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { CircleCheckFilled, InfoFilled, Clock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { orderApi, payApi, couponApi } from '@/api'
+import { orderApi, payApi } from '@/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -234,25 +202,20 @@ const remainingSeconds = ref(0)    // 支付截止倒计时
 let countdownTimer = null
 let deadlineTimer = null
 
-// ========== 优惠券 ==========
-const availableCoupons = ref([])
-const selectedCouponId = ref(null)
-const selectedCoupon = ref(null)
-
-const couponDiscount = computed(() => {
-  if (!selectedCoupon.value) return 0
-  const c = selectedCoupon.value
-  const subtotal = Number(orderInfo.value?.total_amount) || 0
-  if (c.type === 2) {
-    return Math.min(subtotal * (1 - Number(c.reduce_amount) / 100), subtotal)
-  }
-  return Math.min(Number(c.reduce_amount) || 0, subtotal)
-})
-
+// ========== 应付金额 ==========
+// 直接取后端下单时算好的 real_amount（= 商品总额 - 优惠券 + 运费）。
+// 不能在支付页重算一遍：优惠券在下单时已核销并计入 coupon_discount。
 const finalAmount = computed(() => {
+  const real = orderInfo.value?.real_amount
+  if (real !== null && real !== undefined && real !== '') {
+    const n = Number(real)
+    if (!Number.isNaN(n)) return n
+  }
+  // 兜底：real_amount 缺失时按 商品总额 - 优惠 + 运费 计算
   const subtotal = Number(orderInfo.value?.total_amount) || 0
+  const discount = Number(orderInfo.value?.coupon_discount) || 0
   const freight = Number(orderInfo.value?.freight) || 0
-  return subtotal - couponDiscount.value + freight
+  return subtotal - discount + freight
 })
 
 // ========== 计算属性 ==========
@@ -288,10 +251,6 @@ async function fetchOrderInfo() {
     } else if (orderInfo.value?.pay_deadline) {
       // 启动支付截止倒计时
       startDeadlineCountdown()
-    }
-    // 加载可用优惠券
-    if (orderInfo.value && orderInfo.value.status === 0) {
-      fetchAvailableCoupons()
     }
   } catch (error) {
     console.error('获取订单信息失败:', error)
@@ -329,28 +288,6 @@ function startPaidCountdown() {
   }, 1000)
 }
 
-// ========== 获取可用优惠券 ==========
-async function fetchAvailableCoupons() {
-  try {
-    const subtotal = Number(orderInfo.value?.total_amount) || 0
-    const res = await couponApi.getOrderAvailable(subtotal)
-    const data = res.data || res
-    availableCoupons.value = Array.isArray(data) ? data : (data.records || data.list || [])
-  } catch {
-    availableCoupons.value = []
-  }
-}
-
-function toggleCoupon(coupon) {
-  if (selectedCouponId.value === coupon.id) {
-    selectedCouponId.value = null
-    selectedCoupon.value = null
-  } else {
-    selectedCouponId.value = coupon.id
-    selectedCoupon.value = coupon
-  }
-}
-
 // ========== 处理支付 ==========
 async function handlePay() {
   if (paying.value || remainingSeconds.value <= 0) return
@@ -360,11 +297,14 @@ async function handlePay() {
     const res = await payApi.pay({
       orderNo: orderInfo.value.order_no,
       payMethod: payMethod.value,
-      couponId: selectedCouponId.value || undefined,
     })
-    const data = res.data || res
+
+    // 后端在"订单不存在或已支付""订单已超时取消"时返回 HTTP 200 + code:400，
+    // 不判断 code 就会给一个并未付款（甚至已被自动取消）的订单提示"支付成功"
+    if (!res || res.code !== 200) return
+
+    payResult.value = res.data || res
     ElMessage.success('支付成功！')
-    payResult.value = data
 
     // 停止截止倒计时
     if (deadlineTimer) {
@@ -378,6 +318,7 @@ async function handlePay() {
     // 跳转倒计时
     startPaidCountdown()
   } catch (error) {
+    // 失败信息已由响应拦截器统一提示
     console.error('支付失败:', error)
   } finally {
     paying.value = false

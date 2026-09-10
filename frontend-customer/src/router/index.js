@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { isLoggedIn, isAdminLoggedIn } from '@/utils/auth'
+import { isLoggedIn } from '@/utils/auth'
 import { ElMessage } from 'element-plus'
 
 // ============================================
@@ -95,23 +95,6 @@ const routes = [
     component: RefundList,
     meta: { title: '我的退款 - 观锦阁', requiresAuth: true },
   },
-  // ========== 管理后台路由（管理员独立登录页） ==========
-  {
-    path: '/admin/login',
-    name: 'AdminLogin',
-    component: () => import('@/views/admin/AdminLogin.vue'),
-    meta: { title: '管理员登录 - 观锦阁' },
-  },
-  { path: '/admin', name: 'Dashboard', component: () => import('@/views/admin/Dashboard.vue'), meta: { title: '数据统计', requiresAdmin: true } },
-  { path: '/admin/categories', name: 'AdminCategories', component: () => import('@/views/admin/CategoryManage.vue'), meta: { title: '分类管理', requiresAdmin: true } },
-  { path: '/admin/products', name: 'AdminProducts', component: () => import('@/views/admin/ProductManage.vue'), meta: { title: '商品管理', requiresAdmin: true } },
-  { path: '/admin/orders', name: 'AdminOrders', component: () => import('@/views/admin/OrderManage.vue'), meta: { title: '订单管理', requiresAdmin: true } },
-  { path: '/admin/users', name: 'AdminUsers', component: () => import('@/views/admin/UserManage.vue'), meta: { title: '用户管理', requiresAdmin: true } },
-  { path: '/admin/coupons', name: 'AdminCoupons', component: () => import('@/views/admin/CouponManage.vue'), meta: { title: '优惠券管理', requiresAdmin: true } },
-  { path: '/admin/banners', name: 'AdminBanners', component: () => import('@/views/admin/BannerManage.vue'), meta: { title: '轮播图管理', requiresAdmin: true } },
-  { path: '/admin/reviews', name: 'AdminReviews', component: () => import('@/views/admin/ReviewManage.vue'), meta: { title: '评价管理', requiresAdmin: true } },
-  { path: '/admin/refunds', name: 'AdminRefunds', component: () => import('@/views/admin/RefundManage.vue'), meta: { title: '退款处理', requiresAdmin: true } },
-  { path: '/admin/settings', name: 'AdminSettings', component: () => import('@/views/admin/Settings.vue'), meta: { title: '系统设置', requiresAdmin: true } },
   // 404 页面重定向到首页
   {
     path: '/:pathMatch(.*)*',
@@ -151,24 +134,9 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // 管理员路由：检查 admin token
-  if (to.meta.requiresAdmin) {
-    if (!isAdminLoggedIn()) {
-      ElMessage.warning('请先登录管理员账号')
-      next('/admin/login')
-      return
-    }
-  }
-
   // 如果已登录但访问登录页，直接跳转首页
   if (to.path === '/login' && isLoggedIn()) {
     next('/')
-    return
-  }
-
-  // 如果管理员已登录但访问管理员登录页，直接跳转后台首页
-  if (to.path === '/admin/login' && isAdminLoggedIn()) {
-    next('/admin')
     return
   }
 

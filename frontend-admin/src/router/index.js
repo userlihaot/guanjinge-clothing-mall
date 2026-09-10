@@ -38,6 +38,13 @@ const routes = [
         meta: { title: '商品管理', icon: 'Goods' }
       },
       {
+        // 分类管理（原仅存在于客户端重复后台，已合并到此）
+        path: 'categories',
+        name: 'CategoryManage',
+        component: () => import('@/views/CategoryManage.vue'),
+        meta: { title: '分类管理', icon: 'Grid' }
+      },
+      {
         // 订单管理
         path: 'orders',
         name: 'OrderManage',
@@ -57,13 +64,6 @@ const routes = [
         name: 'CouponManage',
         component: () => import('@/views/CouponManage.vue'),
         meta: { title: '优惠券管理', icon: 'Ticket' }
-      },
-      {
-        // 轮播图管理
-        path: 'banners',
-        name: 'BannerManage',
-        component: () => import('@/views/BannerManage.vue'),
-        meta: { title: '轮播图管理', icon: 'PictureFilled' }
       },
       {
         // 评价审核

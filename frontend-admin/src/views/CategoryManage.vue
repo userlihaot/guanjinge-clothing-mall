@@ -1,4 +1,7 @@
 <!-- CategoryManage.vue - 商品分类管理页面 -->
+<!-- 说明：此页面原先只存在于 frontend-customer/src/views/admin/ 下的重复后台副本中，
+     frontend-admin 一直缺少分类管理入口（后端 /api/admin/categories 的 4 个接口早就存在）。
+     合并重复后台时把它移到这里，接口契约与后端 admin.js:363-388 一致：{ name, icon, sortOrder }。 -->
 <template>
   <div class="category-manage">
     <!-- ========== 操作栏 ========== -->
@@ -20,7 +23,7 @@
         <el-table-column prop="name" label="分类名称" min-width="150" />
         <el-table-column prop="icon" label="图标" width="100" align="center">
           <template #default="{ row }">
-            <img v-if="isImageUrl(row.icon)" :src="row.icon" class="cat-icon-img" />
+            <img v-if="isImageUrl(row.icon)" :src="row.icon" class="cat-icon-img" :alt="row.name" />
             <span v-else class="cat-icon-text">{{ row.icon || '--' }}</span>
           </template>
         </el-table-column>
@@ -85,9 +88,15 @@ async function fetchCategories() {
   try {
     const res = await adminApi.getCategories()
     if (res.code === 200) {
-      categoryList.value = res.data || []
+      // 后端返回扁平数组（无分页）
+      const data = res.data
+      categoryList.value = Array.isArray(data) ? data : (data?.records || data?.list || [])
     }
-  } catch { /* 拦截器处理 */ } finally { loading.value = false }
+  } catch {
+    // 错误由拦截器处理
+  } finally {
+    loading.value = false
+  }
 }
 
 function handleAdd() {
@@ -96,7 +105,10 @@ function handleAdd() {
 }
 
 function handleEdit(row) {
-  editing.id = row.id; editing.name = row.name; editing.icon = row.icon || ''; editing.sortOrder = row.sort_order || 0
+  editing.id = row.id
+  editing.name = row.name
+  editing.icon = row.icon || ''
+  editing.sortOrder = row.sort_order || 0
   dialogVisible.value = true
 }
 
@@ -106,20 +118,19 @@ async function handleSubmit() {
   submitLoading.value = true
   try {
     const data = { name: editing.name, icon: editing.icon, sortOrder: editing.sortOrder }
-    let res
-    if (editing.id) {
-      res = await adminApi.updateCategory(editing.id, data)
-    } else {
-      res = await adminApi.createCategory(data)
-    }
-    if (res.code === 200) {
+    const res = editing.id
+      ? await adminApi.updateCategory(editing.id, data)
+      : await adminApi.createCategory(data)
+    if (res && res.code === 200) {
       ElMessage.success(editing.id ? '更新成功' : '创建成功')
       dialogVisible.value = false
       fetchCategories()
-    } else {
-      ElMessage.error(res.message || '操作失败')
     }
-  } catch { /* 拦截器处理 */ } finally { submitLoading.value = false }
+  } catch {
+    // 错误由拦截器处理
+  } finally {
+    submitLoading.value = false
+  }
 }
 
 function handleDelete(row) {
@@ -128,11 +139,29 @@ function handleDelete(row) {
   }).then(async () => {
     try {
       const res = await adminApi.deleteCategory(row.id)
-      if (res.code === 200) { ElMessage.success('删除成功'); fetchCategories() }
-      else { ElMessage.error(res.message || '删除失败') }
-    } catch { /* 拦截器处理 */ }
+      if (res && res.code === 200) {
+        ElMessage.success('删除成功')
+        fetchCategories()
+      }
+    } catch {
+      // 错误由拦截器处理
+    }
   }).catch(() => {})
 }
 
 onMounted(() => fetchCategories())
 </script>
+
+<style scoped>
+.cat-icon-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.cat-icon-text {
+  font-size: 18px;
+  line-height: 1;
+}
+</style>

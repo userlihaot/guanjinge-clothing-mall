@@ -335,8 +335,11 @@ router.put('/refunds/:id/handle', auth, adminAuth, async (req, res) => {
         const [[refund]] = await conn.query('SELECT * FROM refund WHERE id=? AND deleted=0', [req.params.id]);
         if(!refund) throw new Error('退款申请不存在');
         if(status===1){
-            await conn.query('UPDATE refund SET status=1, handle_time=NOW() WHERE id=?', [req.params.id]);
-            await conn.query('UPDATE refund SET status=3, finish_time=NOW() WHERE id=?', [req.params.id]);
+            // 同意即完成：直接落到 status=3（已退款）。
+            // 原先这里先写 status=1，紧接着又无条件覆盖成 3，导致 1 永远不可达，
+            // 而删除接口的守卫是 status IN (1,2)，于是"已同意"的退款永远删不掉。
+            // 现在合并为一次写入，handle_time 与 finish_time 同时记录。
+            await conn.query('UPDATE refund SET status=3, handle_time=NOW(), finish_time=NOW() WHERE id=?', [req.params.id]);
             await conn.query('UPDATE order_master SET status=6 WHERE order_no=?', [refund.order_no]);
         } else {
             await conn.query('UPDATE refund SET status=2, refuse_reason=?, handle_time=NOW() WHERE id=?', [refuseReason, req.params.id]);
@@ -353,7 +356,9 @@ router.put('/refunds/:id/handle', auth, adminAuth, async (req, res) => {
 // 删除退款申请（软删除，仅已处理的可删除）
 router.delete('/refunds/:id', auth, adminAuth, async (req, res) => {
     try {
-        const [r] = await pool.query('UPDATE refund SET deleted=1 WHERE id=? AND status IN (1,2)', [req.params.id]);
+        // 守卫改为"非待处理即可删除"，与前端删除按钮的显示条件保持一致。
+        // 原写法 status IN (1,2) 漏掉了同意退款实际落到的 status=3。
+        const [r] = await pool.query('UPDATE refund SET deleted=1 WHERE id=? AND status <> 0', [req.params.id]);
         if(r.affectedRows===0) return res.json({ code:400, message:'仅已处理的退款可删除', data:null });
         res.json({ code:200, message:'删除成功', data:null });
     } catch (err) { res.json({ code:500, message:'删除失败', data:null }); }

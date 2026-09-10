@@ -81,25 +81,3 @@ export function clearAuth() {
   removeToken()
   removeUser()
 }
-
-// ========== 管理员 Auth ==========
-const ADMIN_TOKEN_KEY = 'guanjinge_admin_token'
-const ADMIN_INFO_KEY = 'guanjinge_admin_info'
-
-export function getAdminToken() { return localStorage.getItem(ADMIN_TOKEN_KEY) }
-export function setAdminToken(token) {
-  if (!token || token === 'undefined' || token === 'null') {
-    localStorage.removeItem(ADMIN_TOKEN_KEY)
-    return
-  }
-  localStorage.setItem(ADMIN_TOKEN_KEY, token)
-}
-export function removeAdminToken() { localStorage.removeItem(ADMIN_TOKEN_KEY) }
-export function getAdminInfo() {
-  try { return JSON.parse(localStorage.getItem(ADMIN_INFO_KEY)) } catch { return null }
-}
-export function setAdminInfo(info) { localStorage.setItem(ADMIN_INFO_KEY, JSON.stringify(info)) }
-export function isAdminLoggedIn() {
-  const t = getAdminToken()
-  return !!(t && t !== 'undefined' && t !== 'null' && t.length > 10)
-}

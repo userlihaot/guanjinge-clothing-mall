@@ -139,7 +139,7 @@ function fmt(v) { return v===null||v===undefined?'--':Number(v).toFixed(2) }
 async function fetch() {
   loading.value = true
   try {
-    const res = await adminApi.getRefunds({ page:page.value, pageSize:pageSize.value, status:filterStatus.value })
+    const res = await adminApi.getRefunds({ page:page.value, size:pageSize.value, status:filterStatus.value })
     if(res.code===200){ refundList.value=res.data.records||[]; total.value=res.data.total||0 }
   } catch {} finally { loading.value = false }
 }

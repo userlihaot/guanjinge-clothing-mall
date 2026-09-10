@@ -39,7 +39,7 @@
         </el-table-column>
 
         <!-- 注册时间 -->
-        <el-table-column prop="createTime" label="注册时间" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="create_time" label="注册时间" min-width="160" show-overflow-tooltip />
 
         <!-- 状态 Switch -->
         <el-table-column label="状态" width="90" align="center">
@@ -104,7 +104,7 @@ async function fetchUsers() {
   try {
     const res = await adminApi.getUsers({
       page: pagination.page,
-      pageSize: pagination.pageSize,
+      size: pagination.pageSize,
       keyword: searchKeyword.value
     })
     if (res.code === 200) {

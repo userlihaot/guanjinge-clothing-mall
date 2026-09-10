@@ -187,7 +187,7 @@ function formatAmount(v) { return v===null||v===undefined?'--':Number(v).toFixed
 async function fetchOrders() {
   loading.value = true
   try {
-    const res = await adminApi.getOrders({ page:pagination.page, pageSize:pagination.pageSize, orderNo:filterOrderNo.value, status:filterStatus.value })
+    const res = await adminApi.getOrders({ page:pagination.page, size:pagination.pageSize, orderNo:filterOrderNo.value, status:filterStatus.value })
     if(res.code===200){ orderList.value = res.data.records||[]; pagination.total = res.data.total||0 }
   } catch {} finally { loading.value = false }
 }

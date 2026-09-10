@@ -64,11 +64,6 @@
                     <el-icon><Wallet /></el-icon>退款记录
                   </router-link>
                 </el-dropdown-item>
-                <el-dropdown-item v-if="isAdmin">
-                  <router-link to="/admin" class="dropdown-link">
-                    <el-icon><Setting /></el-icon>管理后台
-                  </router-link>
-                </el-dropdown-item>
                 <el-dropdown-item divided @click="handleLogout">
                   <el-icon><SwitchButton /></el-icon>退出登录
                 </el-dropdown-item>
@@ -94,11 +89,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Search, ArrowDown, User, Document,
-  ShoppingCart, SwitchButton, Setting, Wallet,
+  ShoppingCart, SwitchButton, Wallet,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
@@ -107,9 +102,6 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
-
-// 检查是否为管理员（localStorage 中有 adminToken）
-const isAdmin = computed(() => !!localStorage.getItem('adminToken'))
 
 // 搜索关键词（双向绑定）
 const searchKeyword = ref('')

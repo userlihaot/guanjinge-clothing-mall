@@ -32,6 +32,12 @@
           <template #title>商品管理</template>
         </el-menu-item>
 
+        <!-- 分类管理 -->
+        <el-menu-item index="/categories">
+          <el-icon><Grid /></el-icon>
+          <template #title>分类管理</template>
+        </el-menu-item>
+
         <!-- 订单管理 -->
         <el-menu-item index="/orders">
           <el-icon><List /></el-icon>
@@ -48,12 +54,6 @@
         <el-menu-item index="/coupons">
           <el-icon><Ticket /></el-icon>
           <template #title>优惠券</template>
-        </el-menu-item>
-
-        <!-- 轮播图 -->
-        <el-menu-item index="/banners">
-          <el-icon><PictureFilled /></el-icon>
-          <template #title>轮播图</template>
         </el-menu-item>
 
         <!-- 评价审核 -->
@@ -107,9 +107,6 @@
                 <el-dropdown-item command="settings">
                   <el-icon><Setting /></el-icon> 系统设置
                 </el-dropdown-item>
-                <el-dropdown-item command="password">
-                  <el-icon><Lock /></el-icon> 修改密码
-                </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <el-icon><SwitchButton /></el-icon> 退出登录
                 </el-dropdown-item>
@@ -124,57 +121,6 @@
         <router-view />
       </el-main>
     </el-container>
-
-    <!-- ========== 修改密码模态框 ========== -->
-    <el-dialog
-      v-model="passwordDialogVisible"
-      title="修改密码"
-      width="440px"
-      :close-on-click-modal="false"
-      center
-      align-center
-    >
-      <el-form
-        ref="passwordFormRef"
-        :model="passwordForm"
-        :rules="passwordRules"
-        label-width="80px"
-        size="default"
-      >
-        <el-form-item label="原密码" prop="oldPassword">
-          <el-input
-            v-model="passwordForm.oldPassword"
-            type="password"
-            placeholder="请输入原密码"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="新密码" prop="newPassword">
-          <el-input
-            v-model="passwordForm.newPassword"
-            type="password"
-            placeholder="请输入6位以上新密码"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input
-            v-model="passwordForm.confirmPassword"
-            type="password"
-            placeholder="请再次输入新密码"
-            show-password
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="passwordDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="passwordLoading" @click="handleChangePassword">
-            确认修改
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
 
     <!-- ========== 退出登录确认模态框 ========== -->
     <el-dialog
@@ -203,14 +149,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   DataAnalysis, Goods, List, UserFilled,
-  Ticket, PictureFilled, StarFilled, Money,
-  Setting, Fold, Expand, ArrowDown, Lock, SwitchButton,
-  WarningFilled
+  Ticket, StarFilled, Money,
+  Setting, Fold, Expand, ArrowDown, SwitchButton,
+  WarningFilled, Grid
 } from '@element-plus/icons-vue'
 import { useAdminStore } from '@/stores/admin'
 
@@ -254,66 +200,6 @@ function goHome() {
   router.push('/dashboard')
 }
 
-// ============ 修改密码模态框 ============
-const passwordDialogVisible = ref(false)
-const passwordLoading = ref(false)
-const passwordFormRef = ref(null)
-
-const passwordForm = reactive({
-  oldPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-})
-
-/**
- * 自定义验证：确认密码必须与新密码一致
- */
-function validateConfirmPassword(rule, value, callback) {
-  if (value !== passwordForm.newPassword) {
-    callback(new Error('两次输入的密码不一致'))
-  } else {
-    callback()
-  }
-}
-
-const passwordRules = {
-  oldPassword: [
-    { required: true, message: '请输入原密码', trigger: 'blur' }
-  ],
-  newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码不能少于6位', trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { required: true, message: '请再次输入新密码', trigger: 'blur' },
-    { validator: validateConfirmPassword, trigger: 'blur' }
-  ]
-}
-
-/**
- * 提交修改密码
- */
-async function handleChangePassword() {
-  const valid = await passwordFormRef.value.validate().catch(() => false)
-  if (!valid) return
-
-  passwordLoading.value = true
-  try {
-    // TODO: 调用修改密码 API
-    // await adminApi.changePassword(passwordForm)
-    ElMessage.success('密码修改成功，请重新登录')
-    passwordDialogVisible.value = false
-    // 重置表单
-    passwordFormRef.value.resetFields()
-    adminStore.logout()
-    router.push('/login')
-  } catch {
-    // handled by interceptor
-  } finally {
-    passwordLoading.value = false
-  }
-}
-
 // ============ 退出登录模态框 ============
 const logoutDialogVisible = ref(false)
 
@@ -329,14 +215,15 @@ function handleLogout() {
 
 /**
  * 处理管理员下拉菜单命令
+ *
+ * 说明：原先这里有「修改密码」，但后端并没有 PUT /api/admin/change-password，
+ * 代码里是一句 `// TODO: 调用修改密码 API` 加一句假的成功提示，
+ * 密码从未被修改。为避免误导，已把该入口与对应弹窗一并移除。
  */
 function handleCommand(command) {
   switch (command) {
     case 'settings':
       router.push('/settings')
-      break
-    case 'password':
-      passwordDialogVisible.value = true
       break
     case 'logout':
       logoutDialogVisible.value = true

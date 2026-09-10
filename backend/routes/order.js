@@ -79,8 +79,8 @@ router.post('/create', async (req, res) => {
             if (coupons.length > 0) {
                 const c = coupons[0];
                 if (totalAmount >= parseFloat(c.full_amount)) {
-                    if (c.type === 2) { // 折扣券
-                        couponDiscount = totalAmount * (1 - parseFloat(c.reduce_amount) / 100);
+                    if (c.type === 2) { // 折扣券：reduce_amount 存的是"折"，如 8.5 表示八五折（付 85%）
+                        couponDiscount = totalAmount * (1 - parseFloat(c.reduce_amount) / 10);
                     } else { // 满减券/无门槛券
                         couponDiscount = parseFloat(c.reduce_amount);
                     }

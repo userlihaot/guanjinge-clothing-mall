@@ -12,13 +12,13 @@
         />
         <el-select v-model="searchCategory" placeholder="商品分类" clearable>
           <el-option label="全部" value="" />
-          <el-option label="唐制汉服" value="1" />
-          <el-option label="宋制汉服" value="2" />
-          <el-option label="明制汉服" value="3" />
-          <el-option label="古风婚服" value="4" />
-          <el-option label="古风配饰" value="5" />
-          <el-option label="改良古装" value="6" />
-          <el-option label="古风演出服" value="7" />
+          <!-- 分类改为从 /admin/categories 动态读取，避免与分类管理页脱节 -->
+          <el-option
+            v-for="c in categoryOptions"
+            :key="c.id"
+            :label="c.name"
+            :value="String(c.id)"
+          />
         </el-select>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button :icon="Refresh" @click="handleReset">重置</el-button>
@@ -90,6 +90,8 @@
               inactive-text="下架"
               inline-prompt
               size="small"
+              :loading="togglingIds.has(row.id)"
+              :disabled="togglingIds.has(row.id)"
               @change="handleToggleStatus(row)"
             />
           </template>
@@ -163,13 +165,13 @@
         </el-form-item>
         <el-form-item label="商品分类" prop="categoryId">
           <el-select v-model="editingProduct.categoryId" placeholder="请选择分类" style="width: 100%">
-            <el-option label="唐制汉服" :value="1" />
-            <el-option label="宋制汉服" :value="2" />
-            <el-option label="明制汉服" :value="3" />
-            <el-option label="古风婚服" :value="4" />
-            <el-option label="古风配饰" :value="5" />
-            <el-option label="改良古装" :value="6" />
-            <el-option label="古风演出服" :value="7" />
+            <!-- 分类改为从 /admin/categories 动态读取，在分类管理页新建的分类这里就能选到 -->
+            <el-option
+              v-for="c in categoryOptions"
+              :key="c.id"
+              :label="c.name"
+              :value="c.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="促销价格">
@@ -204,6 +206,22 @@ const searchCategory = ref('')
 const productList = ref([])
 const loading = ref(false)
 
+// ============ 分类选项（用于搜索筛选与编辑弹窗的下拉）============
+// 从 /admin/categories 动态获取，与「分类管理」页共用同一份数据源
+const categoryOptions = ref([])
+
+async function fetchCategoryOptions() {
+  try {
+    const res = await adminApi.getCategories()
+    if (res && res.code === 200) {
+      const data = res.data
+      categoryOptions.value = Array.isArray(data) ? data : (data?.records || data?.list || [])
+    }
+  } catch {
+    // 错误由请求拦截器处理；获取失败时下拉为空，不影响其他功能
+  }
+}
+
 // ============ 分页信息 ============
 const pagination = reactive({
   page: 1,
@@ -224,7 +242,15 @@ const editingProduct = reactive({
   categoryId: null,
   promotionPrice: 0,
   dynasty: '',
-  fabric: ''
+  fabric: '',
+  // 以下字段本弹窗不提供编辑，但后端 PUT /admin/products/:id 是 13 列全量 UPDATE，
+  // 不原样带回就会被写成 NULL：status 变 NULL 后商品会从商城（按 status=1 过滤）消失，
+  // description 被清空，三个推荐位标志被清零。
+  description: '',
+  status: 1,
+  isHot: 0,
+  isNew: 0,
+  isRecommend: 0
 })
 
 // 编辑表单验证规则
@@ -246,7 +272,7 @@ async function fetchProducts() {
   try {
     const res = await adminApi.getProducts({
       page: pagination.page,
-      pageSize: pagination.pageSize,
+      size: pagination.pageSize,
       keyword: searchKeyword.value,
       categoryId: searchCategory.value
     })
@@ -290,19 +316,31 @@ function formatPrice(price) {
 /**
  * 切换商品上下架状态
  */
+// 正在切换中的商品 id 集合：防止连点造成并发请求互相覆盖（界面与库不一致）
+const togglingIds = ref(new Set())
+
 async function handleToggleStatus(row) {
+  if (togglingIds.value.has(row.id)) return
+  togglingIds.value.add(row.id)
   try {
-    const res = await adminApi.toggleProductStatus(row.id, row.status)
-    if (res.code === 200) {
+    // 必须用专用的上架/下架接口。
+    // PUT /admin/products/:id 是 13 列全量 UPDATE，只带 { status } 会把
+    // name / category_id / price 写成 NULL，触发 NOT NULL 约束 → 永远返回"修改失败"。
+    const res = row.status === 1
+      ? await adminApi.shelveProduct(row.id)
+      : await adminApi.unshelveProduct(row.id)
+    if (res && res.code === 200) {
       ElMessage.success(row.status === 1 ? '已上架' : '已下架')
+      fetchProducts()
     } else {
       // 切换失败则回退状态
       row.status = row.status === 1 ? 0 : 1
-      ElMessage.error(res.message || '操作失败')
     }
   } catch {
-    // 异常时回退状态
+    // 失败信息已由响应拦截器提示，这里只回退开关状态
     row.status = row.status === 1 ? 0 : 1
+  } finally {
+    togglingIds.value.delete(row.id)
   }
 }
 
@@ -320,7 +358,13 @@ function handleEdit(row) {
       categoryId: row.category_id || null,
       promotionPrice: Number(row.promotion_price) || 0,
       dynasty: row.dynasty || '',
-      fabric: row.fabric || ''
+      fabric: row.fabric || '',
+      // 原样保留，提交时回传（见 handleSubmit 注释）
+      description: row.description || '',
+      status: row.status === 0 ? 0 : 1,
+      isHot: row.is_hot ? 1 : 0,
+      isNew: row.is_new ? 1 : 0,
+      isRecommend: row.is_recommend ? 1 : 0
     })
   } else {
     editingProduct.id = null
@@ -332,6 +376,11 @@ function handleEdit(row) {
     editingProduct.promotionPrice = 0
     editingProduct.dynasty = ''
     editingProduct.fabric = ''
+    editingProduct.description = ''
+    editingProduct.status = 1
+    editingProduct.isHot = 0
+    editingProduct.isNew = 0
+    editingProduct.isRecommend = 0
   }
   dialogVisible.value = true
 }
@@ -354,7 +403,13 @@ async function handleSubmit() {
       categoryId: editingProduct.categoryId,
       promotionPrice: editingProduct.promotionPrice,
       dynasty: editingProduct.dynasty,
-      fabric: editingProduct.fabric
+      fabric: editingProduct.fabric,
+      // 后端是全量 UPDATE，这些字段必须回传，否则会被写成 NULL
+      description: editingProduct.description,
+      status: editingProduct.status,
+      isHot: editingProduct.isHot,
+      isNew: editingProduct.isNew,
+      isRecommend: editingProduct.isRecommend
     }
 
     let res
@@ -408,6 +463,7 @@ function handleDelete(row) {
 // ============ 页面加载 ============
 onMounted(() => {
   fetchProducts()
+  fetchCategoryOptions()
 })
 </script>
 

@@ -77,20 +77,6 @@ export const adminApi = {
     return request.delete(`/admin/coupons/${id}`)
   },
 
-  // ==================== 轮播图管理 ====================
-  getBanners() {
-    return request.get('/admin/banners')
-  },
-  createBanner(data) {
-    return request.post('/admin/banners', data)
-  },
-  updateBanner(id, data) {
-    return request.put(`/admin/banners/${id}`, data)
-  },
-  deleteBanner(id) {
-    return request.delete(`/admin/banners/${id}`)
-  },
-
   // ==================== 评价审核 ====================
   getReviews(params = {}) {
     return request.get('/admin/reviews', { params })
