@@ -62,8 +62,9 @@ export const adminApi = {
   getUserDetail(id) {
     return request.get(`/admin/users/${id}`)
   },
-  toggleUserStatus(id) {
-    return request.put(`/admin/users/${id}/status`)
+  // status: 1-启用 0-禁用（显式传目标状态，后端按目标值写入而不是取反）
+  toggleUserStatus(id, status) {
+    return request.put(`/admin/users/${id}/status`, { status })
   },
 
   // ==================== 优惠券管理 ====================

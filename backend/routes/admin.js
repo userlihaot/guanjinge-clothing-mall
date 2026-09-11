@@ -204,7 +204,17 @@ router.get('/users', auth, adminAuth, async (req, res) => {
 
 router.put('/users/:id/status', auth, adminAuth, async (req, res) => {
     try {
-        await pool.query('UPDATE user SET status=CASE WHEN status=1 THEN 0 ELSE 1 END WHERE id=?', [req.params.id]);
+        // 优先按客户端指定的目标状态写入（幂等）。
+        // 原先无论请求体是什么都执行 "status=1 THEN 0 ELSE 1" 取反，
+        // 导致重复请求会把状态又翻回去 —— 点了两次看起来就像没生效。
+        const raw = req.body ? req.body.status : undefined;
+        const target = Number(raw);
+        if (raw !== undefined && raw !== null && raw !== '' && (target === 0 || target === 1)) {
+            await pool.query('UPDATE user SET status=? WHERE id=? AND deleted=0', [target, req.params.id]);
+        } else {
+            // 兼容不传 status 的调用：按当前值取反
+            await pool.query('UPDATE user SET status=CASE WHEN status=1 THEN 0 ELSE 1 END WHERE id=? AND deleted=0', [req.params.id]);
+        }
         res.json({ code:200, message:'状态已更新', data:null });
     } catch (err) { res.json({ code:500, message:'操作失败', data:null }); }
 });

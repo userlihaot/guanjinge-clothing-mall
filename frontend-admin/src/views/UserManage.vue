@@ -52,6 +52,8 @@
               inactive-text="禁用"
               inline-prompt
               size="small"
+              :loading="togglingIds.has(row.id)"
+              :disabled="togglingIds.has(row.id)"
               @change="handleToggleStatus(row)"
             />
           </template>
@@ -138,19 +140,28 @@ function handleReset() {
 /**
  * 切换用户启用/禁用状态
  */
+// 正在切换中的用户 id 集合。
+// 必须防连点：后端原先是"取反"语义，连点两次会翻转两次回到原状态，
+// 界面上却弹了两次成功提示，看起来就像这个开关没生效。
+const togglingIds = ref(new Set())
+
 async function handleToggleStatus(row) {
+  if (togglingIds.value.has(row.id)) return
+  togglingIds.value.add(row.id)
   try {
+    // 显式把目标状态发给后端（后端按目标值写入，不再取反）
     const res = await adminApi.toggleUserStatus(row.id, row.status)
-    if (res.code === 200) {
+    if (res && res.code === 200) {
       ElMessage.success(row.status === 1 ? '已启用该用户' : '已禁用该用户')
     } else {
       // 失败则回退状态
       row.status = row.status === 1 ? 0 : 1
-      ElMessage.error(res.message || '操作失败')
     }
   } catch {
-    // 异常时回退状态
+    // 失败信息已由响应拦截器提示，这里只回退开关
     row.status = row.status === 1 ? 0 : 1
+  } finally {
+    togglingIds.value.delete(row.id)
   }
 }
 
