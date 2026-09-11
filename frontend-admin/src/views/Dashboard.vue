@@ -199,14 +199,14 @@ function buildSalesTrendChart(data) {
       type: 'category',
       boundaryGap: false,
       data: dates,
-      axisLine: { lineStyle: { color: '#dcdfe6' } },
-      axisLabel: { color: '#909399' }
+      axisLine: { lineStyle: { color: '#E8D5C0' } },
+      axisLabel: { color: '#8B7355' }
     },
     yAxis: {
       type: 'value',
       name: '销售额 (¥)',
-      splitLine: { lineStyle: { color: '#ebeef5', type: 'dashed' } },
-      axisLabel: { color: '#909399' }
+      splitLine: { lineStyle: { color: '#F0E4D4', type: 'dashed' } },
+      axisLabel: { color: '#8B7355' }
     },
     series: [
       {
@@ -214,14 +214,14 @@ function buildSalesTrendChart(data) {
         type: 'line',
         smooth: true,
         data: amounts,
-        itemStyle: { color: '#409eff' },
+        itemStyle: { color: '#8B4513' },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-              { offset: 1, color: 'rgba(64, 158, 255, 0.05)' }
+              { offset: 0, color: 'rgba(139, 69, 19, 0.28)' },
+              { offset: 1, color: 'rgba(139, 69, 19, 0.04)' }
             ]
           }
         },
@@ -249,9 +249,10 @@ function buildOrderStatusChart(data) {
       orient: 'vertical',
       right: '5%',
       top: 'center',
-      textStyle: { color: '#606266', fontSize: 12 }
+      textStyle: { color: '#5C4033', fontSize: 12 }
     },
-    color: ['#f56c6c', '#e6a23c', '#409eff', '#67c23a', '#909399', '#f093fb', '#36cfc9'],
+    // 国风暖色系：棕 / 淡金 / 胭脂 / 苔绿 / 金棕 / 琥珀 / 灰棕
+    color: ['#8B4513', '#D4A574', '#C0392B', '#6B8E23', '#B8895A', '#D4943A', '#8B7355'],
     series: [
       {
         name: '订单状态',
@@ -318,7 +319,7 @@ onMounted(async () => {
 <style scoped>
 .amount-text {
   font-weight: 600;
-  color: #e6a23c;
+  color: var(--color-primary);
 }
 
 .bottom-row {
@@ -351,17 +352,17 @@ onMounted(async () => {
   justify-content: center;
   font-size: 12px;
   font-weight: bold;
-  background: #eee;
-  color: #666;
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
-.rank-idx.top1 { background: #f56c6c; color: #fff; }
-.rank-idx.top2 { background: #e6a23c; color: #fff; }
-.rank-idx.top3 { background: #409eff; color: #fff; }
+.rank-idx.top1 { background: var(--color-danger); color: #fff; }
+.rank-idx.top2 { background: var(--color-warning); color: #fff; }
+.rank-idx.top3 { background: var(--color-primary); color: #fff; }
 
-.rank-name { flex: 1; font-size: 14px; color: var(--text-primary); }
-.rank-count { font-size: 13px; color: #909399; }
+.rank-name { flex: 1; font-size: 14px; color: var(--color-text-primary); }
+.rank-count { font-size: 13px; color: var(--color-text-secondary); }
 
 @media (max-width: 768px) {
   .bottom-row { flex-direction: column; }

@@ -476,11 +476,11 @@ onMounted(() => {
 
 .price-text {
   font-weight: 600;
-  color: #e6a23c;
+  color: var(--color-primary);
 }
 
 .no-image {
-  color: #c0c4cc;
+  color: var(--color-text-placeholder);
   font-size: 12px;
 }
 
@@ -492,12 +492,12 @@ onMounted(() => {
 
 .price-current {
   font-weight: 600;
-  color: #C0392B;
+  color: var(--color-danger);
 }
 
 .price-original {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-secondary);
   text-decoration: line-through;
 }
 </style>

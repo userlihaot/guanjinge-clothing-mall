@@ -54,7 +54,7 @@
     <el-dialog v-model="approveVisible" width="420px" :close-on-click-modal="false" destroy-on-close>
       <template #header>
         <div style="display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600">
-          <el-icon :size="22" color="#67C23A"><CircleCheckFilled /></el-icon>
+          <el-icon :size="22" color="var(--color-success)"><CircleCheckFilled /></el-icon>
           <span>确认同意退款</span>
         </div>
       </template>
@@ -63,7 +63,7 @@
         <div class="confirm-box">
           <div class="cb-row"><span>退款编号</span><span class="cb-mono">{{ currentItem.refund_no }}</span></div>
           <div class="cb-row"><span>订单号</span><span class="cb-mono">{{ currentItem.order_no }}</span></div>
-          <div class="cb-row"><span>退款金额</span><b style="color:#C0392B">¥{{ fmt(currentItem.refund_amount) }}</b></div>
+          <div class="cb-row"><span>退款金额</span><b style="color:var(--color-danger)">¥{{ fmt(currentItem.refund_amount) }}</b></div>
         </div>
       </div>
       <template #footer>
@@ -89,7 +89,7 @@
     <el-dialog v-model="deleteVisible" width="420px" :close-on-click-modal="false" destroy-on-close>
       <template #header>
         <div style="display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600">
-          <el-icon :size="22" color="#E74C3C"><WarningFilled /></el-icon>
+          <el-icon :size="22" color="var(--color-danger)"><WarningFilled /></el-icon>
           <span>确认删除退款记录</span>
         </div>
       </template>
@@ -184,12 +184,12 @@ onMounted(()=>fetch())
 </script>
 
 <style scoped>
-.pagination-wrap { display:flex; justify-content:flex-end; margin-top:16px; padding-top:16px; border-top:1px solid #ebeef5 }
-.amount-text { font-weight:600; color:#e6a23c }
-.confirm-tip { font-size:14px; color:#606266; margin-bottom:14px; line-height:1.6 }
-.confirm-tip em { color:#E74C3C; font-weight:600; font-style:normal }
-.confirm-box { background:#f5f7fa; border-radius:8px; padding:12px 16px }
-.cb-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed #e4e7ed; font-size:14px; color:#606266 }
+.pagination-wrap { display:flex; justify-content:flex-end; margin-top:16px; padding-top:16px; border-top:1px solid var(--color-border-light) }
+.amount-text { font-weight:600; color:var(--color-primary) }
+.confirm-tip { font-size:14px; color:var(--color-text-regular); margin-bottom:14px; line-height:1.6 }
+.confirm-tip em { color:var(--color-danger); font-weight:600; font-style:normal }
+.confirm-box { background:var(--color-bg-card); border-radius:8px; padding:12px 16px }
+.cb-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--color-border); font-size:14px; color:var(--color-text-regular) }
 .cb-row:last-child { border-bottom:none }
-.cb-mono { font-family:monospace; font-size:13px; color:#303133 }
+.cb-mono { font-family:monospace; font-size:13px; color:var(--color-text-primary) }
 </style>

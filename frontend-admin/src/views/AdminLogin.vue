@@ -139,8 +139,8 @@ async function handleLogin() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* 渐变背景 */
-  background: linear-gradient(135deg, #1d1e2c 0%, #2d3a4b 50%, #1d1e2c 100%);
+  /* 国风暖色渐变背景，与商城前台主题一致 */
+  background: linear-gradient(135deg, #3D2B1F 0%, #6B3410 50%, #3D2B1F 100%);
   position: relative;
   overflow: hidden;
 }
@@ -152,7 +152,7 @@ async function handleLogin() {
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  background: rgba(64, 158, 255, 0.08);
+  background: rgba(212, 165, 116, 0.10);
   top: -100px;
   right: -100px;
 }
@@ -163,7 +163,7 @@ async function handleLogin() {
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: rgba(64, 158, 255, 0.06);
+  background: rgba(212, 165, 116, 0.08);
   bottom: -80px;
   left: -80px;
 }
@@ -172,9 +172,9 @@ async function handleLogin() {
 .login-card {
   width: 400px;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: var(--radius-large);
   padding: 48px 40px 32px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(61, 43, 31, 0.35);
   z-index: 1;
 }
 
@@ -191,13 +191,15 @@ async function handleLogin() {
 .logo-title {
   font-size: 26px;
   font-weight: 700;
-  color: #303133;
+  color: var(--color-primary);
+  font-family: var(--font-family-serif);
+  letter-spacing: 2px;
   margin: 8px 0 4px;
 }
 
 .logo-subtitle {
   font-size: 14px;
-  color: #909399;
+  color: var(--color-text-secondary);
 }
 
 /* 表单 */

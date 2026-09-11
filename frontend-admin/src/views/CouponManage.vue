@@ -47,7 +47,7 @@
     <el-dialog v-model="deleteVisible" width="420px" :close-on-click-modal="false" destroy-on-close>
       <template #header>
         <div style="display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600">
-          <el-icon :size="22" color="#E74C3C"><WarningFilled /></el-icon>
+          <el-icon :size="22" color="var(--color-danger)"><WarningFilled /></el-icon>
           <span>确认删除优惠券</span>
         </div>
       </template>
@@ -56,7 +56,7 @@
         <div class="delete-info">
           <div class="dl-row"><span>名称</span><b>{{ deleteTarget.name }}</b></div>
           <div class="dl-row"><span>类型</span><el-tag :type="typeTag(deleteTarget.type)" size="small">{{ typeText(deleteTarget.type) }}</el-tag></div>
-          <div class="dl-row"><span>优惠</span><b style="color:#C0392B">{{ deleteTarget.type === 2 ? deleteTarget.reduce_amount+'折' : '-¥'+Number(deleteTarget.reduce_amount||0).toFixed(0) }}</b></div>
+          <div class="dl-row"><span>优惠</span><b style="color:var(--color-danger)">{{ deleteTarget.type === 2 ? deleteTarget.reduce_amount+'折' : '-¥'+Number(deleteTarget.reduce_amount||0).toFixed(0) }}</b></div>
         </div>
       </div>
       <template #footer>
@@ -204,10 +204,10 @@ onMounted(() => fetchCoupons())
 </script>
 
 <style scoped>
-.date-text { font-size:13px; color:#606266 }
-.delete-tip { font-size:14px; color:#606266; margin-bottom:16px; line-height:1.6 }
-.delete-tip em { color:#E74C3C; font-weight:600; font-style:normal }
-.delete-info { background:#f5f7fa; border-radius:8px; padding:14px 16px }
-.dl-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed #e4e7ed; font-size:14px; color:#606266 }
+.date-text { font-size:13px; color:var(--color-text-regular) }
+.delete-tip { font-size:14px; color:var(--color-text-regular); margin-bottom:16px; line-height:1.6 }
+.delete-tip em { color:var(--color-danger); font-weight:600; font-style:normal }
+.delete-info { background:var(--color-bg-card); border-radius:8px; padding:14px 16px }
+.dl-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--color-border); font-size:14px; color:var(--color-text-regular) }
 .dl-row:last-child { border-bottom:none }
 </style>

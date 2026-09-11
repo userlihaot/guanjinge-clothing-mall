@@ -1,23 +1,133 @@
 /* ============================================
    global.css - 观锦阁管理后台全局样式
-   管理后台风格：深色侧边栏 + 白色内容区
+   主题：与 frontend-customer 商城前台统一的国风配色
+        马鞍棕 #8B4513 / 米白 #FFF8F0 / 淡金 #D4A574
    ============================================ */
 
 /* ----- CSS 变量：主题色系 ----- */
 :root {
-  --sidebar-width: 220px;             /* 侧边栏展开宽度 */
-  --sidebar-collapse-width: 64px;     /* 侧边栏折叠宽度 */
-  --sidebar-bg: #1d1e2c;              /* 侧边栏深色背景 */
-  --sidebar-text: #bfcbd9;            /* 侧边栏文字颜色 */
-  --sidebar-hover: #2d2f3e;           /* 侧边栏 hover 颜色 */
-  --sidebar-active: #409eff;          /* 侧边栏选中高亮 */
-  --header-height: 60px;              /* 顶部栏高度 */
-  --content-bg: #f0f2f5;              /* 内容区域背景灰 */
-  --card-bg: #ffffff;                 /* 卡片白色背景 */
-  --primary-color: #409eff;           /* Element Plus 主色 */
-  --text-primary: #303133;            /* 主文字色 */
-  --text-regular: #606266;            /* 常规文字色 */
-  --border-color: #ebeef5;            /* 边框色 */
+  /* ---- 布局尺寸 ---- */
+  --sidebar-width: 220px;
+  --sidebar-collapse-width: 64px;
+  --header-height: 60px;
+
+  /* ---- 国风主题令牌（与商城前台命名保持一致）---- */
+  /* 主色调 - 红棕色系 */
+  --color-primary: #8B4513;
+  --color-primary-light: #A0522D;
+  --color-primary-dark: #6B3410;
+  --color-primary-hover: #7A3B10;
+
+  /* 背景色 */
+  --color-bg-primary: #FFF8F0;   /* 主背景：米白 */
+  --color-bg-white: #FFFFFF;
+  --color-bg-card: #FFFAF5;      /* 卡片/侧边栏：暖米白 */
+
+  /* 强调色 - 淡金 */
+  --color-accent: #D4A574;
+  --color-accent-light: #E8C9A0;
+  --color-accent-dark: #B8895A;
+
+  /* 文字颜色 */
+  --color-text-primary: #3D2B1F;
+  --color-text-regular: #5C4033;
+  --color-text-secondary: #8B7355;
+  --color-text-placeholder: #BFA98A;
+
+  /* 边框颜色 */
+  --color-border: #E8D5C0;
+  --color-border-light: #F0E4D4;
+  --color-border-base: #DBC8B0;
+
+  /* 功能色 */
+  --color-danger: #C0392B;
+  --color-success: #6B8E23;
+  --color-warning: #D4943A;
+  --color-info: #8B7355;
+
+  /* 阴影（带棕色tint，与前台一致）*/
+  --shadow-light: 0 2px 8px rgba(139, 69, 19, 0.08);
+  --shadow-medium: 0 4px 16px rgba(139, 69, 19, 0.12);
+  --shadow-heavy: 0 8px 32px rgba(139, 69, 19, 0.16);
+
+  /* 圆角 */
+  --radius-small: 4px;
+  --radius-base: 8px;
+  --radius-large: 12px;
+  --radius-round: 20px;
+
+  /* 字体 */
+  --font-family-base: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
+  --font-family-serif: 'Noto Serif SC', 'STSong', 'SimSun', 'KaiTi', serif;
+
+  /* ---- 兼容管理端原有变量名（值已改为暖色）---- */
+  --sidebar-bg: #FFFAF5;
+  --sidebar-text: #5C4033;
+  --sidebar-hover: #F3ECE7;
+  --sidebar-active: #8B4513;
+  --content-bg: #FFF8F0;
+  --card-bg: #FFFFFF;
+  --primary-color: #8B4513;
+  --text-primary: #3D2B1F;
+  --text-regular: #5C4033;
+  --border-color: #E8D5C0;
+
+  /* ---- Element Plus 主题覆盖：把默认蓝改为国风棕 ---- */
+  --el-color-primary: #8B4513;
+  --el-color-primary-light-3: #AE7D5A;
+  --el-color-primary-light-5: #C5A289;
+  --el-color-primary-light-7: #DCC7B8;
+  --el-color-primary-light-8: #E8DAD0;
+  --el-color-primary-light-9: #F3ECE7;
+  --el-color-primary-dark-2: #6F370F;
+
+  /* 功能色也统一到前台那套自然色，避免蓝色系残留 */
+  --el-color-success: #6B8E23;
+  --el-color-success-light-3: #97B065;
+  --el-color-success-light-5: #B5C791;
+  --el-color-success-light-7: #D3DDBD;
+  --el-color-success-light-8: #E1E8D3;
+  --el-color-success-light-9: #F0F4E9;
+  --el-color-success-dark-2: #56721C;
+
+  --el-color-warning: #D4943A;
+  --el-color-warning-light-3: #E1B475;
+  --el-color-warning-light-5: #EACA9D;
+  --el-color-warning-light-7: #F2DFC4;
+  --el-color-warning-light-8: #F6EAD8;
+  --el-color-warning-light-9: #FBF4EB;
+  --el-color-warning-dark-2: #AA762E;
+
+  --el-color-danger: #C0392B;
+  --el-color-danger-light-3: #D3746B;
+  --el-color-danger-light-5: #E09C95;
+  --el-color-danger-light-7: #ECC4BF;
+  --el-color-danger-light-8: #F2D7D5;
+  --el-color-danger-light-9: #F9EBEA;
+  --el-color-danger-dark-2: #9A2E22;
+
+  --el-color-info: #8B7355;
+  --el-color-info-light-3: #AE9D88;
+  --el-color-info-light-5: #C5B9AA;
+  --el-color-info-light-7: #DCD5CC;
+  --el-color-info-light-8: #E8E3DD;
+  --el-color-info-light-9: #F3F1EE;
+  --el-color-info-dark-2: #6F5C44;
+
+  /* 文字与边框也跟随暖色，否则表格/表单会残留冷灰 */
+  --el-text-color-primary: #3D2B1F;
+  --el-text-color-regular: #5C4033;
+  --el-text-color-secondary: #8B7355;
+  --el-text-color-placeholder: #BFA98A;
+  --el-border-color: #E8D5C0;
+  --el-border-color-light: #F0E4D4;
+  --el-border-color-lighter: #F0E4D4;
+  --el-border-color-extra-light: #F7EFE6;
+  --el-fill-color-light: #FBF4EB;
+  --el-fill-color-blank: #FFFFFF;
+  --el-bg-color: #FFFFFF;
+  --el-bg-color-overlay: #FFFFFF;
 }
 
 /* ----- 基础重置 ----- */
@@ -30,7 +140,7 @@
 html, body, #app {
   height: 100%;
   width: 100%;
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+  font-family: var(--font-family-base);
   color: var(--text-primary);
   background: var(--content-bg);
   -webkit-font-smoothing: antialiased;
@@ -40,6 +150,11 @@ html, body, #app {
 a {
   text-decoration: none;
   color: var(--primary-color);
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
 }
 
 /* ----- 内容区外层容器 ----- */
@@ -52,30 +167,37 @@ a {
 /* ----- 卡片样式 ----- */
 .card-container {
   background: var(--card-bg);
-  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-base);
   padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-light);
   margin-bottom: 20px;
 }
 
 .card-container .card-title {
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border);
 }
 
 /* ----- 表格通用样式 ----- */
 .el-table {
-  border-radius: 4px;
+  border-radius: var(--radius-small);
 }
 
 .el-table th.el-table__cell {
-  background-color: #fafafa;
-  color: var(--text-primary);
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary);
   font-weight: 600;
+}
+
+.el-table {
+  --el-table-border-color: var(--color-border-light);
+  --el-table-header-bg-color: var(--color-bg-card);
+  --el-table-row-hover-bg-color: #FBF4EB;
 }
 
 /* ----- 搜索栏样式 ----- */
@@ -93,6 +215,7 @@ a {
 }
 
 /* ----- 统计卡片样式 (Dashboard 用) ----- */
+/* 由原来的紫/粉/蓝/绿通用渐变改为国风暖色系 */
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -101,26 +224,26 @@ a {
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
+  background: linear-gradient(135deg, #8B4513 0%, #B8895A 100%);
+  border-radius: var(--radius-large);
   padding: 24px;
   color: #ffffff;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 16px rgba(139, 69, 19, 0.28);
 }
 
 .stat-card:nth-child(2) {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  box-shadow: 0 4px 16px rgba(245, 87, 108, 0.3);
+  background: linear-gradient(135deg, #6B3410 0%, #8B4513 100%);
+  box-shadow: 0 4px 16px rgba(107, 52, 16, 0.28);
 }
 
 .stat-card:nth-child(3) {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3);
+  background: linear-gradient(135deg, #9A2E22 0%, #C0392B 100%);
+  box-shadow: 0 4px 16px rgba(192, 57, 43, 0.26);
 }
 
 .stat-card:nth-child(4) {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  box-shadow: 0 4px 16px rgba(67, 233, 123, 0.3);
+  background: linear-gradient(135deg, #6B8E23 0%, #4F6B1A 100%);
+  box-shadow: 0 4px 16px rgba(107, 142, 35, 0.26);
 }
 
 .stat-card .stat-label {
@@ -144,16 +267,18 @@ a {
 
 .chart-box {
   background: var(--card-bg);
-  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-base);
   padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-light);
 }
 
 .chart-box .chart-title {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-serif);
 }
 
 /* ----- 表单相关样式 ----- */
@@ -169,48 +294,58 @@ a {
   font-size: 12px;
 }
 
-/* ----- Element Plus 暗色菜单变量覆盖 ----- */
-.el-menu--dark {
-  background-color: var(--sidebar-bg) !important;
-}
-
-.el-menu--dark .el-menu-item,
-.el-menu--dark .el-sub-menu__title {
-  color: var(--sidebar-text) !important;
-}
-
-.el-menu--dark .el-menu-item:hover,
-.el-menu--dark .el-sub-menu__title:hover {
-  background-color: var(--sidebar-hover) !important;
-  color: #ffffff !important;
-}
-
-.el-menu--dark .el-menu-item.is-active {
-  color: var(--sidebar-active) !important;
-}
-
-/* ----- 通用工具样式 ----- */
+/* ----- 分页 ----- */
 .pagination-wrap {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--color-border-light);
 }
 
+/* ----- 通用工具样式 ----- */
 .no-image {
-  color: #c0c4cc;
+  color: var(--color-text-placeholder);
   font-size: 12px;
 }
 
 .amount-text {
   font-weight: 600;
-  color: #e6a23c;
+  color: var(--color-primary);
 }
 
 .price-text {
   font-weight: 600;
-  color: #e6a23c;
+  color: var(--color-primary);
+}
+
+/* ----- 弹窗圆角与标题统一 ----- */
+.el-dialog {
+  border-radius: var(--radius-large);
+}
+
+.el-dialog__title {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ----- 滚动条（暖色，避免默认灰蓝）----- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-base);
+  border-radius: var(--radius-round);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-dark);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* ----- 响应式 ----- */

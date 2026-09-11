@@ -41,7 +41,7 @@
               v-model="row.star"
               disabled
               show-score
-              text-color="#ff9900"
+              text-color="#D4943A"
               score-template="{value}分"
             />
           </template>

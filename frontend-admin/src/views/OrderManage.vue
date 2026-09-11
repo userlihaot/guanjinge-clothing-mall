@@ -76,7 +76,7 @@
           <el-descriptions-item label="商品总额">¥{{ formatAmount(detailOrder.total_amount) }}</el-descriptions-item>
           <el-descriptions-item label="运费">¥{{ formatAmount(detailOrder.freight) }}</el-descriptions-item>
           <el-descriptions-item label="优惠券抵扣" v-if="detailOrder.coupon_discount>0">-¥{{ formatAmount(detailOrder.coupon_discount) }}</el-descriptions-item>
-          <el-descriptions-item label="实付金额"><b style="color:#C0392B">¥{{ formatAmount(detailOrder.real_amount) }}</b></el-descriptions-item>
+          <el-descriptions-item label="实付金额"><b style="color:var(--color-danger)">¥{{ formatAmount(detailOrder.real_amount) }}</b></el-descriptions-item>
           <el-descriptions-item label="下单时间">{{ detailOrder.create_time }}</el-descriptions-item>
           <el-descriptions-item v-if="detailOrder.pay_time" label="付款时间">{{ detailOrder.pay_time }}</el-descriptions-item>
           <el-descriptions-item v-if="detailOrder.logistics_company" label="快递公司">{{ detailOrder.logistics_company }}</el-descriptions-item>
@@ -89,10 +89,10 @@
           <el-table-column label="商品" min-width="260">
             <template #default="{ row: item }">
               <div style="display:flex;align-items:center;gap:10px">
-                <img :src="item.product_image || ''" style="width:50px;height:62px;border-radius:4px;object-fit:cover;background:#FDF5ED" @error="e=>e.target.style.display='none'" />
+                <img :src="item.product_image || ''" style="width:50px;height:62px;border-radius:4px;object-fit:cover;background:var(--color-bg-card)" @error="e=>e.target.style.display='none'" />
                 <div>
                   <p>{{ item.product_name }}</p>
-                  <p v-if="item.sku_name" style="font-size:12px;color:#999">{{ item.sku_name }}</p>
+                  <p v-if="item.sku_name" style="font-size:12px;color:var(--color-text-secondary)">{{ item.sku_name }}</p>
                 </div>
               </div>
             </template>
@@ -102,7 +102,7 @@
           </el-table-column>
           <el-table-column prop="quantity" label="数量" width="80" align="center" />
           <el-table-column label="小计" width="100" align="center">
-            <template #default="{ row: item }"><span style="color:#C0392B;font-weight:600">¥{{ (item.price*item.quantity).toFixed(2) }}</span></template>
+            <template #default="{ row: item }"><span style="color:var(--color-danger);font-weight:600">¥{{ (item.price*item.quantity).toFixed(2) }}</span></template>
           </el-table-column>
         </el-table>
       </template>
@@ -112,7 +112,7 @@
     <el-dialog v-model="deleteDialogVisible" width="440px" :close-on-click-modal="false" destroy-on-close>
       <template #header>
         <div style="display:flex;align-items:center;gap:8px;font-size:18px;font-weight:600">
-          <el-icon :size="22" color="#E74C3C"><WarningFilled /></el-icon>
+          <el-icon :size="22" color="var(--color-danger)"><WarningFilled /></el-icon>
           <span>确认删除订单</span>
         </div>
       </template>
@@ -121,7 +121,7 @@
         <div class="delete-order-info">
           <div class="doi-row"><span>订单号</span><span class="doi-mono">{{ deleteTargetOrder.order_no }}</span></div>
           <div class="doi-row"><span>状态</span><el-tag :type="getStatusType(deleteTargetOrder.status)" size="small">{{ getStatusText(deleteTargetOrder.status) }}</el-tag></div>
-          <div class="doi-row"><span>金额</span><b style="color:#C0392B">¥{{ formatAmount(deleteTargetOrder.real_amount) }}</b></div>
+          <div class="doi-row"><span>金额</span><b style="color:var(--color-danger)">¥{{ formatAmount(deleteTargetOrder.real_amount) }}</b></div>
           <div class="doi-row"><span>收货人</span><span>{{ deleteTargetOrder.receiver_name }}</span></div>
         </div>
       </div>
@@ -244,14 +244,14 @@ onMounted(()=>fetchOrders())
 </script>
 
 <style scoped>
-.pagination-wrap { display:flex; justify-content:flex-end; margin-top:16px; padding-top:16px; border-top:1px solid #ebeef5 }
-.amount-text { font-weight:600; color:#e6a23c }
+.pagination-wrap { display:flex; justify-content:flex-end; margin-top:16px; padding-top:16px; border-top:1px solid var(--color-border-light) }
+.amount-text { font-weight:600; color:var(--color-primary) }
 
 /* 删除确认弹窗 */
-.delete-tip { font-size:14px; color:#606266; margin-bottom:16px; line-height:1.6 }
-.delete-tip em { color:#E74C3C; font-weight:600; font-style:normal }
-.delete-order-info { background:#f5f7fa; border-radius:8px; padding:14px 16px }
-.doi-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed #e4e7ed; font-size:14px; color:#606266 }
+.delete-tip { font-size:14px; color:var(--color-text-regular); margin-bottom:16px; line-height:1.6 }
+.delete-tip em { color:var(--color-danger); font-weight:600; font-style:normal }
+.delete-order-info { background:var(--color-bg-card); border-radius:8px; padding:14px 16px }
+.doi-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--color-border); font-size:14px; color:var(--color-text-regular) }
 .doi-row:last-child { border-bottom:none }
-.doi-mono { font-family:monospace; font-size:13px; color:#303133 }
+.doi-mono { font-family:monospace; font-size:13px; color:var(--color-text-primary) }
 </style>

@@ -1,7 +1,7 @@
-<!-- AdminLayout.vue - 管理后台主布局：深色侧边栏 + 白色内容区 -->
+<!-- AdminLayout.vue - 管理后台主布局：浅米白国风侧边栏 + 暖色内容区 -->
 <template>
   <el-container class="admin-container">
-    <!-- ========== 左侧深色侧边栏 ========== -->
+    <!-- ========== 左侧国风侧边栏 ========== -->
     <el-aside :width="isCollapse ? '64px' : '220px'" class="admin-aside">
       <!-- Logo 区域 -->
       <div class="aside-logo" @click="goHome">
@@ -9,14 +9,11 @@
         <span v-show="!isCollapse" class="logo-text">观锦阁</span>
       </div>
 
-      <!-- 导航菜单 -->
+      <!-- 导航菜单（配色由 CSS 变量控制，见下方 .admin-menu） -->
       <el-menu
         :default-active="activeMenu"
         :collapse="isCollapse"
         :collapse-transition="false"
-        background-color="#1d1e2c"
-        text-color="#bfcbd9"
-        active-text-color="#ffffff"
         router
         class="admin-menu"
       >
@@ -133,7 +130,7 @@
     >
       <div class="logout-dialog-content">
         <div class="logout-icon-wrap">
-          <el-icon :size="48" color="#e6a23c"><WarningFilled /></el-icon>
+          <el-icon :size="48" color="#D4943A"><WarningFilled /></el-icon>
         </div>
         <p class="logout-text">确定要退出登录吗？</p>
         <p class="logout-sub-text">退出后需要重新登录才能访问管理后台</p>
@@ -240,9 +237,10 @@ function handleCommand(command) {
   overflow: hidden;
 }
 
-/* ========== 左侧深色侧边栏 ========== */
+/* ========== 左侧国风侧边栏 ========== */
 .admin-aside {
-  background-color: #1d1e2c;
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--color-border);
   transition: width 0.3s ease;
   overflow-x: hidden;
   overflow-y: auto;
@@ -254,7 +252,8 @@ function handleCommand(command) {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(135deg, #FFF8F0 0%, #F3ECE7 100%);
   user-select: none;
 }
 
@@ -266,12 +265,33 @@ function handleCommand(command) {
 .logo-text {
   font-size: 18px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-primary);
+  font-family: var(--font-family-serif);
+  letter-spacing: 1px;
   white-space: nowrap;
 }
 
 .admin-menu {
   border-right: none;
+  /* Element Plus 菜单配色变量：浅底 + 棕字 + 淡金高亮 */
+  --el-menu-bg-color: var(--sidebar-bg);
+  --el-menu-text-color: var(--sidebar-text);
+  --el-menu-hover-bg-color: var(--sidebar-hover);
+  --el-menu-hover-text-color: var(--color-primary);
+  --el-menu-active-color: var(--sidebar-active);
+  --el-menu-item-height: 52px;
+}
+
+/* 选中项：淡金底 + 左侧棕色竖条 */
+.admin-menu .el-menu-item.is-active {
+  background-color: var(--el-color-primary-light-9);
+  color: var(--color-primary) !important;
+  font-weight: 600;
+  border-right: 3px solid var(--color-primary);
+}
+
+.admin-menu .el-menu-item.is-active .el-icon {
+  color: var(--color-primary);
 }
 
 .admin-menu:not(.el-menu--collapse) {
@@ -288,12 +308,13 @@ function handleCommand(command) {
 /* ========== 顶部栏 ========== */
 .admin-header {
   height: 60px;
-  background: #ffffff;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-light);
   z-index: 10;
 }
 
@@ -305,18 +326,19 @@ function handleCommand(command) {
 
 .collapse-btn {
   cursor: pointer;
-  color: #606266;
+  color: var(--color-text-secondary);
   transition: color 0.2s;
 }
 
 .collapse-btn:hover {
-  color: #409eff;
+  color: var(--color-primary);
 }
 
 .header-breadcrumb {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-serif);
 }
 
 .header-right {
@@ -330,17 +352,17 @@ function handleCommand(command) {
   gap: 8px;
   cursor: pointer;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   transition: background-color 0.2s;
 }
 
 .admin-dropdown-link:hover {
-  background-color: #f5f7fa;
+  background-color: var(--el-color-primary-light-9);
 }
 
 .admin-name {
   font-size: 14px;
-  color: #303133;
+  color: var(--color-text-primary);
   max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -349,7 +371,7 @@ function handleCommand(command) {
 
 /* ========== 主内容区 ========== */
 .admin-main {
-  background-color: #f0f2f5;
+  background-color: var(--content-bg);
   padding: 20px;
   overflow-y: auto;
   height: calc(100vh - 60px);
@@ -375,13 +397,13 @@ function handleCommand(command) {
 .logout-text {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--color-text-primary);
   margin: 0 0 8px 0;
 }
 
 .logout-sub-text {
   font-size: 13px;
-  color: #909399;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 </style>
