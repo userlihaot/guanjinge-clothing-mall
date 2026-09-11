@@ -23,8 +23,22 @@
         <el-table-column prop="name" label="分类名称" min-width="150" />
         <el-table-column prop="icon" label="图标" width="100" align="center">
           <template #default="{ row }">
-            <img v-if="isImageUrl(row.icon)" :src="row.icon" class="cat-icon-img" :alt="row.name" />
-            <span v-else class="cat-icon-text">{{ row.icon || '--' }}</span>
+            <!--
+              先立即显示默认图标（emoji/文字），不等图片请求。
+              图片只在真正加载成功（@load）后才替换上去；加载失败就一直保留默认图标。
+              这样即使 icon 是失效的外链，也不会出现几秒空白 —— 之前是等图片超时才回退的。
+            -->
+            <span class="cat-icon-cell">
+              <span v-if="!loadedIcons[row.id]" class="cat-icon-text">{{ iconText(row) }}</span>
+              <img
+                v-if="isImageIcon(row.icon)"
+                :src="row.icon"
+                class="cat-icon-img"
+                :class="{ 'is-loaded': loadedIcons[row.id] }"
+                :alt="row.name"
+                @load="loadedIcons[row.id] = true"
+              />
+            </span>
           </template>
         </el-table-column>
         <el-table-column prop="sort_order" label="排序" width="80" align="center" />
@@ -49,8 +63,8 @@
         <el-form-item label="分类名称" prop="name">
           <el-input v-model="editing.name" placeholder="请输入分类名称" />
         </el-form-item>
-        <el-form-item label="图标" help="可输入图片URL或Emoji文字">
-          <el-input v-model="editing.icon" placeholder="输入图片URL或Emoji（如🌸）" />
+        <el-form-item label="图标" help="推荐直接用 Emoji（如 👘），不依赖外部图床；也可填写图片地址">
+          <el-input v-model="editing.icon" placeholder="Emoji（如 👘）或图片地址" />
         </el-form-item>
         <el-form-item label="排序值" prop="sortOrder">
           <el-input-number v-model="editing.sortOrder" :min="0" :step="1" style="width:100%" />
@@ -79,8 +93,46 @@ const formRef = ref(null)
 const editing = reactive({ id: null, name: '', icon: '', sortOrder: 0 })
 const formRules = { name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }] }
 
-function isImageUrl(val) {
-  return val && /^https?:\/\//.test(val)
+// 记录哪些行的图片已经确认加载成功，成功后把默认图标替换成图片
+const loadedIcons = reactive({})
+
+/**
+ * 判断 icon 字段是否是一个图片地址。
+ * 除了 http(s) 绝对地址，也要支持相对路径（如 /image/xxx.jpg）和 data URI，
+ * 因为本项目商品图用的就是相对路径（/image/商品名.jpg），分类图标同理。
+ */
+function isImageIcon(val) {
+  if (!val) return false
+  const s = String(val).trim()
+  return /^(https?:\/\/|\/|\.\/|data:image\/)/i.test(s)
+}
+
+/**
+ * 分类默认图标。
+ * 与商城前台 HomeView.vue 的 categories 保持一致，
+ * 用于 icon 为空、或 icon 是图片地址但加载失败时的兜底显示。
+ * 这样即使数据库里存的是失效的外链，列表也不会出现空白/破图。
+ */
+const DEFAULT_CATEGORY_ICONS = {
+  '唐制汉服': '👘',
+  '宋制汉服': '🎋',
+  '明制汉服': '🏮',
+  '古风婚服': '💒',
+  '古风配饰': '💎',
+  '改良古装': '✨',
+  '古风演出服': '🎭',
+}
+const FALLBACK_ICON = '🏷️'
+
+/**
+ * 单元格里显示的图标内容：
+ * - Emoji / 普通文字：原样显示
+ * - 图片地址但加载失败，或 icon 为空：回退到默认图标（不显示原始 URL，也不留空）
+ */
+function iconText(row) {
+  const s = String(row.icon || '').trim()
+  if (s && !isImageIcon(s)) return s
+  return DEFAULT_CATEGORY_ICONS[String(row.name || '').trim()] || FALLBACK_ICON
 }
 
 async function fetchCategories() {
@@ -153,15 +205,38 @@ onMounted(() => fetchCategories())
 </script>
 
 <style scoped>
+/* 图标单元格：给绝对定位的图片一个稳定的占位尺寸，避免加载前后行高跳动 */
+.cat-icon-cell {
+  position: relative;
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  vertical-align: middle;
+}
+
 .cat-icon-img {
   width: 28px;
   height: 28px;
   object-fit: contain;
-  vertical-align: middle;
+  border-radius: var(--radius-small);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* 未确认加载成功前不可见；用 visibility 而不是 display，
+     因为 display:none 在部分浏览器下可能不触发图片请求 */
+  visibility: hidden;
+}
+
+.cat-icon-img.is-loaded {
+  visibility: visible;
 }
 
 .cat-icon-text {
-  font-size: 18px;
-  line-height: 1;
+  font-size: 20px;
+  line-height: 28px;
+  display: inline-block;
+  color: var(--color-text-secondary);
 }
 </style>

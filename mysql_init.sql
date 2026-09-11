@@ -455,13 +455,13 @@ INSERT INTO `user` (`username`, `password`, `phone`, `nickname`, `gender`) VALUE
 
 -- 商品分类数据
 INSERT INTO `category` (`id`, `name`, `parent_id`, `level`, `icon`, `sort_order`) VALUES
-(1, '唐制汉服', 0, 1, 'https://picsum.photos/seed/cat-tang.png', 1),
-(2, '宋制汉服', 0, 1, 'https://picsum.photos/seed/cat-song.png', 2),
-(3, '明制汉服', 0, 1, 'https://picsum.photos/seed/cat-ming.png', 3),
-(4, '古风婚服', 0, 1, 'https://picsum.photos/seed/cat-wedding.png', 4),
-(5, '古风配饰', 0, 1, 'https://picsum.photos/seed/cat-accessory.png', 5),
-(6, '改良古装', 0, 1, 'https://picsum.photos/seed/cat-modern.png', 6),
-(7, '古风演出服', 0, 1, 'https://picsum.photos/seed/cat-stage.png', 7);
+(1, '唐制汉服', 0, 1, '👘', 1),
+(2, '宋制汉服', 0, 1, '🎋', 2),
+(3, '明制汉服', 0, 1, '🏮', 3),
+(4, '古风婚服', 0, 1, '💒', 4),
+(5, '古风配饰', 0, 1, '💎', 5),
+(6, '改良古装', 0, 1, '✨', 6),
+(7, '古风演出服', 0, 1, '🎭', 7);
 
 -- 商品测试数据 (观锦阁古装样品)
 INSERT INTO `product` (`name`, `subtitle`, `category_id`, `brand`, `description`, `price`, `promotion_price`, `stock`, `sales_count`, `cover_image`, `dynasty`, `fabric`, `color`, `is_hot`, `is_new`, `is_recommend`, `keyword`) VALUES
