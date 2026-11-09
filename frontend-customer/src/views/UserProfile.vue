@@ -86,7 +86,7 @@
               <el-input v-model="profileForm.nickname" placeholder="请输入昵称" maxlength="20" />
             </el-form-item>
             <el-form-item label="手机号">
-              <el-input v-model="profileForm.mobile" placeholder="请输入手机号" maxlength="11" />
+              <el-input v-model="profileForm.phone" placeholder="请输入手机号" maxlength="11" />
             </el-form-item>
             <el-form-item label="性别">
               <el-radio-group v-model="profileForm.gender">
@@ -286,15 +286,18 @@ const favoriteCount = ref(0)
 // 最近订单
 const recentOrders = ref([])
 
-// 个人资料
+// 个人资料（字段名与后端 /api/user/profile 保持一致：手机号是 phone）
 const saving = ref(false)
 const profileForm = reactive({
   username: '',
   nickname: '',
-  mobile: '',
+  phone: '',
   gender: 'other',
   birthday: '',
 })
+
+// 后端 gender 存的是 TINYINT（0-未知 1-男 2-女），单选框用的是字符串，两个方向都要转
+const GENDER_TINTY_TO_TEXT = { 0: 'other', 1: 'male', 2: 'female' }
 
 // 修改密码
 const changingPwd = ref(false)
@@ -326,7 +329,7 @@ function handleMenuSelect(index) {
   if (index === 'orders') {
     fetchRecentOrders()
   } else if (index === 'profile') {
-    initProfileForm()
+    loadProfile()
   } else if (index === 'address') {
     fetchAddressList()
   } else if (index === 'favorites') {
@@ -354,26 +357,43 @@ async function fetchRecentOrders() {
   }
 }
 
+// 拉取最新个人资料再回填表单。
+// 登录接口只返回 token/昵称/头像，用户名、手机号、性别、生日要靠 GET /user/profile 才有，
+// 所以进个人中心必须先请求一次，否则表单永远是空的。
+async function loadProfile() {
+  await userStore.fetchUserInfo()
+  initProfileForm()
+}
+
 // 初始化个人资料表单
 function initProfileForm() {
   const user = userStore.userInfo || {}
   profileForm.username = user.username || ''
   profileForm.nickname = user.nickname || ''
-  profileForm.mobile = user.mobile || ''
-  profileForm.gender = user.gender || 'other'
-  profileForm.birthday = user.birthday || ''
+  // 接口返回的字段是 phone（历史代码误用了 mobile，导致手机号一直显示为空）
+  profileForm.phone = user.phone || user.mobile || ''
+  profileForm.gender = GENDER_TINTY_TO_TEXT[Number(user.gender)] || 'other'
+  // 生日可能被序列化成 ISO 字符串，只取日期部分
+  profileForm.birthday = user.birthday ? String(user.birthday).slice(0, 10) : ''
 }
 
 // 保存个人资料
 async function handleSaveProfile() {
+  // 手机号不在后端时校验，这里先给出即时反馈
+  if (profileForm.phone && !/^1\d{10}$/.test(profileForm.phone)) {
+    ElMessage.warning('请输入 11 位手机号')
+    return
+  }
   saving.value = true
   try {
     await userStore.updateUserInfo({
       nickname: profileForm.nickname,
-      mobile: profileForm.mobile,
+      phone: profileForm.phone,
       gender: profileForm.gender,
-      birthday: profileForm.birthday,
+      birthday: profileForm.birthday || null,
     })
+    // 用后端回传的最新资料回填表单（性别数字转文字、生日截断等都在 initProfileForm 里统一处理）
+    initProfileForm()
     ElMessage.success('个人资料更新成功')
   } catch (error) {
     console.error('更新失败:', error)
@@ -553,6 +573,8 @@ async function handleReceiveCoupon(coupon) {
 
 onMounted(() => {
   fetchRecentOrders()
+  // 个人资料是默认展示的分页，进页面就拉一次最新数据
+  loadProfile()
 })
 </script>
 

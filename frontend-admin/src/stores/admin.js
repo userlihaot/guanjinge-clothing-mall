@@ -3,7 +3,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getAdminToken, setAdminToken, removeAdminToken, getAdminInfo, setAdminInfo } from '@/utils/auth'
 import { adminApi } from '@/api'
-import { ElMessage } from 'element-plus'
 
 export const useAdminStore = defineStore(
   'admin',
@@ -28,13 +27,15 @@ export const useAdminStore = defineStore(
           }
           setAdminInfo(adminInfo.value)
           return true
-        } else {
-          ElMessage.error((res && res.message) || '登录失败')
-          return false
         }
+        // 兜底：业务失败但拦截器没 reject 的情况
+        const error = new Error((res && res.message) || '登录失败')
+        error.userMessage = error.message
+        throw error
       } catch (err) {
+        // 抛给登录页：由页面统一弹一个居中的提示框，避免同一处失败弹两个框
         console.error('管理员登录异常:', err)
-        return false
+        throw err
       }
     }
 

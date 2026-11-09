@@ -81,10 +81,13 @@ request.interceptors.response.use(
       }
       // 后端错误文案字段是 message
       const message = res.message || '操作失败'
-      ElMessage.error(message)
       const error = new Error(message)
       error.code = res.code
       error.response = response
+      // 归一化的「可直接展示给用户」的文案，调用方（如登录页）优先用它
+      error.userMessage = message
+      // 调用方传了 silent（例如登录页要自己弹一个居中的提示框），就不再重复提示
+      if (!response.config?.silent) ElMessage.error(message)
       return Promise.reject(error)
     }
 
@@ -92,34 +95,44 @@ request.interceptors.response.use(
     return res
   },
   (error) => {
+    // silent: 调用方自行展示错误（登录页需要把提示框放在页面正中）
+    const silent = !!error.config?.silent
+    // 统一出口：记录可展示文案，并（非 silent 时）弹提示
+    const notify = (msg) => {
+      error.userMessage = msg
+      if (!silent) ElMessage.error(msg)
+    }
+
     if (error.response) {
       const { status, data } = error.response
       switch (status) {
         case 401:
           // 未授权或 token 过期
+          error.userMessage = data?.message || '登录已失效，请重新登录'
           handleAuthFailure()
           break
         case 403:
           // 权限不足（例如拿用户 token 访问管理员接口），
           // 必须清掉登录态，否则会一直卡在后台页面反复报错
           handleAuthFailure(data?.message || '权限不足，请使用管理员账号重新登录')
+          error.userMessage = data?.message || '权限不足，请使用管理员账号重新登录'
           break
         case 404:
-          ElMessage.error(data?.message || '请求的资源不存在')
+          notify(data?.message || '请求的资源不存在')
           break
         case 500:
           // 服务器内部错误，尝试从响应中提取错误信息
-          ElMessage.error(data?.message || '服务器内部错误')
+          notify(data?.message || '服务器内部错误')
           break
         default:
-          ElMessage.error(data?.message || `请求失败 (${status})`)
+          notify(data?.message || `请求失败 (${status})`)
       }
     } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
       // 请求超时
-      ElMessage.error('请求超时，请稍后重试')
+      notify('请求超时，请稍后重试')
     } else {
       // 网络错误（无法连接到服务器）
-      ElMessage.error('网络错误，请检查网络连接')
+      notify('网络错误，请检查网络连接')
     }
     return Promise.reject(error)
   }

@@ -4,7 +4,8 @@ import request from '@/utils/request'
 export const adminApi = {
   // ==================== 认证 ====================
   login(username, password) {
-    return request.post('/admin/login', { username, password })
+    // silent: 登录失败由登录页自己弹提示（居中显示），拦截器不再重复提示
+    return request.post('/admin/login', { username, password }, { silent: true })
   },
   getAdminInfo() {
     return request.get('/admin/info')

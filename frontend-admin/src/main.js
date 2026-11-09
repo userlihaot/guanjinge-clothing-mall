@@ -7,6 +7,12 @@ import App from './App.vue'
 import router from './router'
 // 全局样式 — 管理后台风格
 import './assets/styles/global.css'
+// ElMessage / ElMessageBox 属于 JS 服务（不是模板里的组件），
+// unplugin-vue-components 的按需引入管不到它们的样式，必须手动引入，
+// 否则提示框会以无样式 div 的形式堆在页面左下角。
+import 'element-plus/theme-chalk/el-message.css'
+import 'element-plus/theme-chalk/el-message-box.css'
+import 'element-plus/theme-chalk/el-overlay.css'
 
 // 创建 Vue 应用实例
 const app = createApp(App)
